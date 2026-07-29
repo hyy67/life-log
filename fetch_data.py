@@ -9,7 +9,7 @@
 - 英语：默认内置示例；若配置 ENGLISH_RSS 则自动抓取公众号 RSS 镜像
 依赖：标准库即可（urllib）
 """
-import json, urllib.request, urllib.error, datetime, re, sys, os
+import json, urllib.request, urllib.error, urllib.parse, datetime, re, sys, os
 
 def strip_tags(s):
     return re.sub(r"<[^>]+>", "", s or "").replace("\s+", " ").strip()
@@ -179,11 +179,52 @@ def fetch_english():
          "link":"https://weixin.qq.com/"},
     ], True
 
+# ---------- 5. 每日天气（Open-Meteo，免密钥）----------
+WMO = {
+ 0:"晴",1:"大致晴朗",2:"局部多云",3:"阴",45:"雾",48:"雾凇",
+ 51:"毛毛雨",53:"小雨",55:"中雨",56:"冻雨",57:"冻雨",61:"小雨",63:"中雨",65:"大雨",
+ 66:"冻雨",67:"冻雨",71:"小雪",73:"中雪",75:"大雪",77:"雪粒",80:"阵雨",81:"阵雨",82:"强阵雨",
+ 85:"阵雪",86:"强阵雪",95:"雷阵雨",96:"雷阵雨伴冰雹",99:"强雷暴冰雹"
+}
+def wmo_text(c):
+    try: return WMO.get(int(float(c)), "未知")
+    except: return "未知"
+
+def fetch_weather():
+    city = (os.environ.get("WEATHER_CITY") or "北京").strip()
+    try:
+        g = get("https://geocoding-api.open-meteo.com/v1/search?name=%s&count=1&language=zh" % urllib.parse.quote(city))
+        res = json.loads(g).get("results") or [{}]
+        lat = res[0].get("latitude"); lon = res[0].get("longitude")
+        if lat is None or lon is None: raise ValueError("geo")
+        furl = ("https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s"
+                "&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min"
+                "&timezone=Asia%%2FShanghai&forecast_days=2") % (lat, lon)
+        o = json.loads(get(furl))
+        cw = o.get("current_weather", {})
+        d = o.get("daily", {})
+        def day(i):
+            return {"tmax": (d.get("temperature_2m_max") or [None,None])[i],
+                    "tmin": (d.get("temperature_2m_min") or [None,None])[i],
+                    "code": (d.get("weathercode") or [None,None])[i],
+                    "text": wmo_text((d.get("weathercode") or [None,None])[i])}
+        return {"city": city,
+                "updated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "today": {"temp": cw.get("temperature"), **day(0)},
+                "tomorrow": day(1)}, False
+    except Exception as e:
+        print("weather fail:", e, file=sys.stderr)
+        return {"city": city, "updated": "",
+                "today": {"temp": None, "tmax": 30, "tmin": 20, "code": 0, "text": "晴"},
+                "tomorrow": {"tmax": 30, "tmin": 20, "code": 0, "text": "晴"},
+                "_demo": True}, True
+
 def main():
     indices, di = fetch_indices()
     news, dn, raw = fetch_news()
     boards, db = fetch_boards(raw)
     english, de = fetch_english()
+    weather, dw = fetch_weather()
     trade = is_trade_day()
     review = None
     if trade:
@@ -206,11 +247,12 @@ def main():
         "english": english, "_demo_english": de,
         "review": review,
         "_demo_boards": db,
+        "weather": weather, "_demo_weather": dw,
     }
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    print("data.json 已生成 | 指数demo=%s 板块demo=%s 新闻demo=%s 英语demo=%s 交易日=%s"
-          % (di, db, dn, de, trade))
+    print("data.json 已生成 | 指数demo=%s 板块demo=%s 新闻demo=%s 英语demo=%s 天气demo=%s 交易日=%s"
+          % (di, db, dn, de, dw, trade))
 
 if __name__ == "__main__":
     main()

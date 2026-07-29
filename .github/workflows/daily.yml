@@ -21,6 +21,9 @@ jobs:
           python-version: '3.11'
 
       - name: 抓取行情 / 新闻 / 英语素材 → 生成 data.json
+        env:
+          ENGLISH_RSS: ${{ vars.ENGLISH_RSS }}
+          WEATHER_CITY: ${{ vars.WEATHER_CITY }}
         run: python3 fetch_data.py
 
       - name: 提交更新

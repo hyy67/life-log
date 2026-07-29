@@ -214,9 +214,10 @@ function loadRemote(){
 }
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600); }
 
-/* 模块注册表：10 个固定板块 */
+/* 模块注册表：固定板块（+天气） */
 const MODULES = [
   {id:'overview', name:'今日总览', ico:'🏠'},
+  {id:'weather',  name:'每日天气', ico:'🌤️'},
   {id:'wardrobe', name:'电子衣橱', ico:'👗'},
   {id:'english',  name:'英语打卡', ico:'🗣️'},
   {id:'health',   name:'饮食健康', ico:'🥗'},
@@ -271,7 +272,7 @@ function toggleCheckin(mod){
 ========================================================= */
 function renderContent(){
   const el=document.getElementById('content');
-  const map={overview:p_overview,wardrobe:p_wardrobe,english:p_english,health:p_health,
+  const map={overview:p_overview,weather:p_weather,wardrobe:p_wardrobe,english:p_english,health:p_health,
              vlog:p_vlog,ai:p_ai,news:p_news,review:p_review,save:p_save,account:p_account};
   el.innerHTML = (map[current]||p_overview)();
   // 渲染后钩子
@@ -289,6 +290,11 @@ function p_overview(){
   const doneCount = MODULES.filter(m=>m.id!=='overview').filter(m=>c[m.id]).length;
   const total = MODULES.length-1;
   const pct = Math.round(doneCount/total*100);
+  const wd = (REMOTE&&REMOTE.weather)||null;
+  const wtemp = wd&&wd.today&&wd.today.temp!=null?Math.round(wd.today.temp):'—';
+  const wtext = (wd&&wd.today&&wd.today.text)||'—';
+  const whl = wd&&wd.today?('最高 '+Math.round(wd.today.tmax||0)+'° / 最低 '+Math.round(wd.today.tmin||0)+'°'):'';
+  const wcity = wd?wd.city:'本地';
   const items = MODULES.filter(m=>m.id!=='overview'&&visible.includes(m.id)).map(m=>{
     const d=!!c[m.id];
     return `<div class="item-row" onclick="go('${m.id}')" style="cursor:pointer">
@@ -308,9 +314,39 @@ function p_overview(){
       </div>
     </div>
   </div>
+  <div class="card"><h3 style="margin-top:0">🌤️ ${wcity} · 今日天气</h3>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="font-size:30px;font-weight:700;color:var(--primary)">${wtemp}°</div>
+      <div><div style="font-weight:600">${wtext}</div><div style="color:var(--muted);font-size:13px">${whl}</div></div>
+    </div>
+  </div>
   <div class="card"><h3 style="margin-top:0">板块打卡状态</h3>${items||'<div class="empty">暂无可见模块</div>'}</div>`;
 }
 
+/* —— 0.5 每日天气 —— */
+function p_weather(){
+  const w = (REMOTE&&REMOTE.weather) || {city:'北京', today:{temp:null,tmax:0,tmin:0,text:'—'}, tomorrow:{tmax:0,tmin:0,text:'—'}};
+  const demo = REMOTE&&REMOTE._demo_weather;
+  const t = w.today||{}, tm = w.tomorrow||{};
+  return `<div class="card">
+    <h2>🌤️ 每日天气 <span class="tag">${w.city||'本地'}</span></h2>
+    ${checkinHTML('weather','已看今日天气')}
+    ${demo?'<div class="pill red" style="margin-bottom:8px">演示数据 · 部署后自动抓取真实天气</div>':''}
+    <div style="display:flex;align-items:center;gap:18px;padding:10px 4px">
+      <div style="font-size:46px;font-weight:700;color:var(--primary)">${t.temp!=null?Math.round(t.temp)+'°':'—'}</div>
+      <div>
+        <div style="font-size:18px;font-weight:600">${t.text||'—'}</div>
+        <div style="color:var(--muted);font-size:13px">最高 ${Math.round(t.tmax!=null?t.tmax:0)}° / 最低 ${Math.round(t.tmin!=null?t.tmin:0)}°</div>
+      </div>
+    </div>
+    <div style="background:var(--paper);border-radius:14px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:13px;color:var(--muted)">明天</div>
+      <div style="font-weight:600">${Math.round(tm.tmax!=null?tm.tmax:0)}° / ${Math.round(tm.tmin!=null?tm.tmin:0)}°</div>
+      <div style="color:var(--primary)">${tm.text||'—'}</div>
+    </div>
+    <div class="note">天气数据来自 Open-Meteo，每日自动更新${demo?'（当前为示例）':''}。城市可在仓库 Variables 里改。</div>
+  </div>`;
+}
 /* —— 1. 电子衣橱 —— */
 function p_wardrobe(){
   return `<div class="card">
