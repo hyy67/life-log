@@ -1,0 +1,114 @@
+{
+  "generatedAt": "2026-07-29 22:52",
+  "date": "2026-07-29",
+  "indices": [
+    {
+      "name": "上证指数",
+      "value": 3828.469,
+      "pct": 0.4
+    },
+    {
+      "name": "深证成指",
+      "value": 13658.443,
+      "pct": 1.1
+    },
+    {
+      "name": "创业板指",
+      "value": 3378.696,
+      "pct": 1.55
+    }
+  ],
+  "_demo_indices": false,
+  "news": {
+    "全球宏观": [
+      [
+        "美联储",
+        "维持利率不变，点阵图暗示年内或降息1次",
+        "_demo"
+      ]
+    ],
+    "央行动态": [
+      [
+        "人民银行",
+        "开展逆回购呵护流动性，LPR持平",
+        "_demo"
+      ]
+    ],
+    "国内财经": [
+      [
+        "财政",
+        "专项债发行提速，基建链资金面改善",
+        "_demo"
+      ]
+    ]
+  },
+  "_demo_news": true,
+  "english": [
+    {
+      "en": "I really appreciate you taking the time to help me with this.",
+      "cn": "非常感谢你抽时间帮我这件事。",
+      "link": "https://weixin.qq.com/"
+    },
+    {
+      "en": "Let's touch base sometime next week to align on the plan.",
+      "cn": "我们下周找个时间对齐下方案。",
+      "link": "https://weixin.qq.com/"
+    },
+    {
+      "en": "Could you walk me through how this process works?",
+      "cn": "你能带我过一遍这个流程是怎么运作的吗？",
+      "link": "https://weixin.qq.com/"
+    }
+  ],
+  "_demo_english": true,
+  "review": {
+    "isTrade": true,
+    "indices": [
+      {
+        "name": "上证指数",
+        "value": 3828.469,
+        "pct": 0.4
+      },
+      {
+        "name": "深证成指",
+        "value": 13658.443,
+        "pct": 1.1
+      },
+      {
+        "name": "创业板指",
+        "value": 3378.696,
+        "pct": 1.55
+      }
+    ],
+    "boards": [
+      {
+        "name": "半导体",
+        "pct": 3.1,
+        "_demo": true
+      },
+      {
+        "name": "新能源车",
+        "pct": -1.4,
+        "_demo": true
+      },
+      {
+        "name": "红利低波",
+        "pct": 0.8,
+        "_demo": true
+      }
+    ],
+    "potential": [
+      {
+        "name": "人工智能（软硬件）",
+        "opp": "产业趋势确定",
+        "risk": "估值波动大、业绩兑现节奏"
+      },
+      {
+        "name": "红利/高股息",
+        "opp": "低利率环境稀缺收益",
+        "risk": "风格切换时弹性不足"
+      }
+    ]
+  },
+  "_demo_boards": true
+}
