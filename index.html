@@ -628,7 +628,7 @@ function p_review(){
       <h3 style="margin-top:12px">1 · 全市场基金整体走势</h3>
       <p class="sub">股票型/混合型随主要指数${idx[0].pct>=0?'收涨':'承压'}，债券型稳健；量能变化以当日成交为准（数据每日收盘后更新）。</p>
       <h3>2 · 热门行业板块</h3>`+
-      (boards.length?boards.map(b=>`<div class="item-row"><div class="meta"><div class="t">${b.name} <span class="pill ${b.pct>=0?'green':'red'}">${b.pct>0?'+':''}${b.pct}%</span></div><div class="d">${b._demo?'示例数据（部署后抓取真实涨跌）':'当日涨跌幅'}</div></div></div>`).join(''):'<div class="empty">板块数据生成中</div>')+
+      (boards.length?boards.map(b=>`<div class="item-row"><div class="meta"><div class="t">${b.name} <span class="pill green">🔥 热度 ${b.pct}</span></div><div class="d">${b._demo?'示例数据（部署后自动生成）':'根据今日新闻提及热度（真实）'}</div></div></div>`).join(''):'<div class="empty">板块数据生成中</div>')+
       `<h3>3 · 中长期配置潜力板块</h3>`+
       (pot.length?pot.map(p=>`<div class="item-row"><div class="meta"><div class="t">🔆 ${p.name}</div><div class="d">机会：${p.opp}；风险：${p.risk}</div></div></div>`).join(''):'')+
       (REMOTE&&REMOTE._demo_boards?`<div class="note">当前为演示数据，部署后自动抓取真实板块涨跌与原因。</div>`:'');
