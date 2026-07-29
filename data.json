@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-29 16:23",
+  "generatedAt": "2026-07-29 16:30",
   "date": "2026-07-29",
   "indices": [
     {
@@ -163,9 +163,9 @@
   "_demo_boards": false,
   "weather": {
     "city": "北京",
-    "updated": "2026-07-29 16:23",
+    "updated": "2026-07-29 16:30",
     "today": {
-      "temp": 27.6,
+      "temp": 27.5,
       "tmax": 34.9,
       "tmin": 26.4,
       "code": 80,
