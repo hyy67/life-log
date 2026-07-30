@@ -303,7 +303,22 @@ function q(s){ return document.querySelector(s); }
 /* ---------- 工具 ---------- */
 function pick(pool, n, off){ off=off||0; const out=[]; const base=dateSeed()+off; for(let i=0;i<n;i++){ out.push(pool[(base+i)%pool.length]); } return out; }
 function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-function playTTS(t,lang){ try{ const u=new SpeechSynthesisUtterance(t); u.lang=lang||"en-US"; u.rate=.95; speechSynthesis.speak(u);}catch(e){ toast("浏览器不支持朗读"); } }
+function youdaoUrl(text, isZh){ const q=encodeURIComponent(String(text||'').slice(0,160)); return 'https://dict.youdao.com/dictvoice?audio='+q+'&type='+(isZh?1:2); }
+function playTTS(text, lang){
+  text=String(text||'').trim(); if(!text){ return; }
+  const isZh=/[一-鿿]/.test(text);
+  // 主方案：有道 TTS 音频（国内可直连，真实发音），失败再退回浏览器内置语音
+  let a=document.getElementById('tts_audio');
+  if(!a){ a=document.createElement('audio'); a.id='tts_audio'; a.style.display='none'; document.body.appendChild(a); }
+  a.src=youdaoUrl(text, isZh);
+  const p=a.play();
+  if(p&&p.catch){ p.catch(()=>{ synthFallback(text, isZh?'zh-CN':'en-US'); }); }
+}
+function synthFallback(text, lang){
+  if(!('speechSynthesis' in window)){ toast('音频加载失败，请检查网络'); return; }
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang=lang||'en-US'; u.rate=.95; speechSynthesis.speak(u); }
+  catch(e){ toast('音频播放失败'); }
+}
 
 /* ============================================================
    精选内容池（本地，按日期轮换；标注"精选"）
@@ -375,12 +390,12 @@ const AI_AUDIO = [
   {t:"十分钟搞懂大模型", text:"大模型本质是在预测下一个词，区别在参数规模、训练数据和对齐方式。理解这点，选型时就不会被营销话术带偏。"},
 ];
 const WORK_TIPS = [
-  {t:"原材料行业分析", s:"上海有色网·实时原材料行情与产业研报", url:"https://www.smm.cn/"},
-  {t:"市场情况", s:"生意社·大宗商品价格指数与涨跌榜", url:"https://www.100ppi.com/"},
-  {t:"成本拆分", s:"拆解单价：原料+加工+物流+税，定位可谈空间", url:"https://www.zhihu.com/search?type=content&q=%E6%88%90%E6%9C%AC%E7%BB%93%E6%9E%84%E6%8B%86%E8%A7%A3%E5%88%86%E6%9E%90"},
-  {t:"比价", s:"1688·同规格多家报价横向比价", url:"https://www.1688.com/"},
-  {t:"谈判技巧", s:"采购谈判话术、节奏与压价策略", url:"https://www.zhihu.com/search?type=content&q=%E9%87%87%E8%B4%AD%E8%B0%88%E5%88%A4%E6%8A%80%E5%B7%A7"},
-  {t:"供应商分析", s:"企查查·资质、股权与风险核查", url:"https://www.qcc.com/"},
+  {t:"原材料行业分析", s:"实时行情、产业研报与价格走势", q:"原材料行业分析 行情 研报 价格走势 上海有色网"},
+  {t:"市场情况", s:"大宗商品市场供需与涨跌榜", q:"大宗商品 市场行情 供需 涨跌榜 生意社"},
+  {t:"成本拆分", s:"拆单价：原料+加工+物流+税，定位可谈空间", q:"采购 成本结构 拆解 分析 原料 加工 物流 税"},
+  {t:"比价", s:"同规格多家报价横向比价", q:"1688 同款 比价 采购 报价 横向对比"},
+  {t:"谈判技巧", s:"采购谈判话术、节奏与压价策略", q:"采购谈判 技巧 话术 压价 策略"},
+  {t:"供应商分析", s:"资质、股权与风险核查", q:"供应商 评估 分析 资质 风险核查 企查查"},
 ];
 const PHOTO_TIPS = [
   {t:"手机拍人像用自然光", s:"窗边侧光最显肤质，避开顶光。"},
@@ -712,8 +727,10 @@ function p_ai(){
     </div>
     <div class="card">
       <h3>🎧 音频速览（点开即听）</h3>
-      <div class="note">用设备语音合成实时朗读，无需联网音频文件，点「🔊 播放」即可听。</div>
-      ${AI_AUDIO.map(x=>`<div class="item-row"><div class="thumb">🎧</div><div class="meta"><div class="t">${esc(x.t)}</div></div><button class="btn sm ghost" onclick="playTTS('${esc(x.text)}')">🔊 播放</button></div>`).join("")}
+      <div class="note">点「▶ 播放」即可听到真实语音（有道 TTS，国内可直连；个别环境不可用时自动退回浏览器朗读）。</div>
+      ${AI_AUDIO.map(x=>`<div class="item-row"><div class="thumb">🎧</div><div class="meta"><div class="t">${esc(x.t)}</div></div>
+        <audio controls preload="none" src="${youdaoUrl(x.text, /[一-鿿]/.test(x.text))}" style="width:150px;height:30px"></audio>
+        <button class="btn sm ghost" onclick="playTTS('${esc(x.text)}')">🔊 朗读</button></div>`).join("")}
     </div>
     <div class="card">
       <h3>📝 今日 AI 学习提炼总结</h3>
@@ -874,7 +891,10 @@ function p_english(){
     </div>
     <div class="subtab" id="en_6">
       <div class="card"><h3>👂 精听训练 <span class="tag">专4~6级</span></h3>
-        <div class="tag-line">${esc(listen.en)}<br><button class="btn sm ghost" onclick="playTTS('${esc(listen.en)}')">🔊 逐句音频</button></div>
+        <div class="tag-line">${esc(listen.en)}<br>
+          <audio controls preload="none" src="${youdaoUrl(listen.en,false)}" style="width:200px;height:32px;margin:4px 0;vertical-align:middle"></audio>
+          <button class="btn sm ghost" onclick="playTTS('${esc(listen.en)}')">🔊 朗读</button>
+        </div>
         <div class="note">中文：${esc(listen.cn)}</div>
         <div class="note">难点：${esc(listen.hard)}</div>
       </div>
@@ -1044,9 +1064,9 @@ function p_work(){
   m.innerHTML = `
     <h2 class="mod">🧰 工作资源 · 采购专用 <span class="gear" onclick="openSettings('work')">⚙</span></h2>
     ${checkinHTML('work','看完今日采购要点',5)}
-    <div class="card"><h3>📎 采购必备 · 点开即看即用</h3>
-      <div class="note">每个主题对应一个实用网页，点右侧「打开↗」直达，边看边用。</div>
-      ${WORK_TIPS.map(t=>`<div class="item-row"><div class="thumb">🔗</div><div class="meta"><div class="t">${esc(t.t)}</div><div class="d">${esc(t.s)}</div></div><span class="linkbtn" onclick="window.open('${esc(t.url)}','_blank')">打开↗</span></div>`).join("")}
+    <div class="card"><h3>📎 采购必备 · 实时检索即用</h3>
+      <div class="note">每个主题对应一组<b>实时检索</b>结果，点右侧「检索↗」直达百度聚合页，<b>内容随最新资料自动更新</b>；若你有一篇必读好文，把链接发我即可钉死固定。</div>
+      ${WORK_TIPS.map(t=>`<div class="item-row"><div class="thumb">🔗</div><div class="meta"><div class="t">${esc(t.t)}</div><div class="d">${esc(t.s)}</div></div><span class="linkbtn" onclick="window.open('https://www.baidu.com/s?wd=${encodeURIComponent(t.q)}','_blank')">检索↗</span></div>`).join("")}
     </div>
     <div class="card"><h3>🧮 成本拆分 / 比价 / 谈判 / 供应商（要点速记）</h3>
       <div class="tag-line">比价：同规格 3 家报价取加权均价。</div>
