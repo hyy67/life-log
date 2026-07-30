@@ -145,6 +145,9 @@
   .item-row .t{font-weight:600;font-size:14.5px;}
   .item-row .d{color:var(--muted);font-size:12.5px;}
   .item-row .linkbtn{color:var(--primary);font-size:12.5px;flex:0 0 auto;}
+  .item-row .linkbtn.danger{color:var(--warn);}
+  .wardrobe-grid .wt{font-size:12px;color:var(--ink);margin-top:2px;line-height:1.3;}
+  .wardrobe-grid .wm{font-size:10.5px;color:var(--muted);}
   .empty{color:var(--muted);text-align:center;padding:18px;font-size:13px;}
 
   .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;-webkit-overflow-scrolling:touch;}
@@ -206,6 +209,7 @@
     <div class="title">壹壹</div>
     <div class="coins">🪙 <span id="coin_num">0</span></div>
     <div class="ico-btn" id="btn_edit" title="编辑模块顺序">✥</div>
+    <div class="ico-btn" id="btn_backup" title="数据备份">💾</div>
   </div>
 
   <!-- 主体 -->
@@ -347,17 +351,48 @@ const OUTFIT_TIPS = [
   {t:"腰带定位腰最细处", s:"明确高腰线，避开胯部最宽。"},
 ];
 const BOOKS = [
-  {t:"《非暴力沟通》", a:"马歇尔·卢森堡", c:"人性/沟通", w:"化解冲突，理解彼此需求。"},
-  {t:"《思考，快与慢》", a:"卡尼曼", c:"心理学", w:"看清直觉与理性的偏差。"},
-  {t:"《高效能人士的七个习惯》", a:"柯维", c:"效率提升", w:"以终为始，要事第一。"},
-  {t:"《被讨厌的勇气》", a:"岸见一郎", c:"个人成长", w:"课题分离，获得自由。"},
-  {t:"《原子习惯》", a:"詹姆斯·克利尔", c:"效率提升", w:"1%微小改进复利。"},
-  {t:"《人性的弱点》", a:"卡耐基", c:"人性", w:"赢得他人信任的方法。"},
-  {t:"《刻意练习》", a:"安德斯·艾利克森", c:"个人成长", w:"天才源于正确练习。"},
-  {t:"《口语王》", a:"编者", c:"口语表达", w:"高频情景口语速成。"},
-  {t:"《心理学与生活》", a:"津巴多", c:"心理学", w:"系统入门心理学。"},
-  {t:"《纳瓦尔宝典》", a:"纳瓦尔", c:"个人成长", w:"财富与幸福的底层逻辑。"},
+  {t:"《非暴力沟通》", a:"马歇尔·卢森堡", c:"人性/沟通", w:"化解冲突，理解彼此需求。", pages:240,
+   content:["非暴力沟通（NVC）的核心是四步：观察、感受、需要、请求。我们不评判、不指责，只描述事实与内心。",
+   "当我们说“你总是不听我说话”，对方会防御；换成“这周我有三次想分享时你都在看手机，我有些失落，因为我需要被在意”，沟通就打开了。",
+   "愤怒往往不是对方造成的，而是自己未被满足的需要。先连接需要，再表达请求，关系才会流动。"]},
+  {t:"《思考，快与慢》", a:"卡尼曼", c:"心理学", w:"看清直觉与理性的偏差。", pages:418,
+   content:["大脑有两套系统：系统1快速直觉，系统2缓慢理性。多数误判来自系统1的“偷懒”。",
+   "锚定效应、可得性偏差、损失厌恶……我们以为自己在理性决策，其实常被框架牵着走。",
+   "知道偏差不等于能避开它。多用清单与慢思考，把重要决定交给系统2过一遍。"]},
+  {t:"《高效能人士的七个习惯》", a:"柯维", c:"效率提升", w:"以终为始，要事第一。", pages:381,
+   content:["七个习惯从“依赖”走向“独立”再走向“互赖”：主动积极、以终为始、要事第一是根基。",
+   "要事第一的关键是区分“重要”与“紧急”。我们常忙于一堆紧急却不重要的事，把重要的事一直拖。",
+   "双赢思维与知彼解己，让你在关系中既成全自己，也成全他人。"]},
+  {t:"《被讨厌的勇气》", a:"岸见一郎", c:"个人成长", w:"课题分离，获得自由。", pages:272,
+   content:["一切烦恼来自人际关系。而解脱的钥匙是“课题分离”：这是谁的课题，就由谁承担。",
+   "你无法改变他人，只能改变自己。在意别人怎么看，是把别人的课题扛到了自己肩上。",
+   "自由就是被讨厌的勇气——不讨好、不逃避，对自己的选择负责。"]},
+  {t:"《原子习惯》", a:"詹姆斯·克利尔", c:"效率提升", w:"1%微小改进复利。", pages:320,
+   content:["你不会改变目标，你会改变系统。每天进步 1%，一年后是原来的 37 倍。",
+   "习惯养成四法则：让它显而易见、有吸引力、简便易行、令人愉悦。",
+   "身份认同最关键：别只想着“我要跑步”，而是“我是一个跑者”。行为会追认身份。"]},
+  {t:"《人性的弱点》", a:"卡耐基", c:"人性", w:"赢得他人信任的方法。", pages:291,
+   content:["想被人喜欢，先真诚地感兴趣于对方。记住名字，是语言里最动听的声音。",
+   "批评换不来改变，赞美才能。指出错误前先肯定，给对方留足面子。",
+   "说服的秘诀是：谈对方想要的，并告诉他怎么得到。"]},
+  {t:"《刻意练习》", a:"安德斯·艾利克森", c:"个人成长", w:"天才源于正确练习。", pages:340,
+   content:["天赋不是天花板，正确的练习方式才是分水岭。天才更像是被“练”出来的。",
+   "刻意练习三要素：走出舒适区、有明确定义的目标、及时且高质量的反馈。",
+   "心理表征决定水平——高手脑中的“画面”更清晰，所以决策更快更准。"]},
+  {t:"《口语王》", a:"编者", c:"口语表达", w:"高频情景口语速成。", pages:360,
+   content:["口语不是背单词，而是把高频句型练成肌肉记忆。先求能说，再求说得准。",
+   "点餐、问路、开会、砍价——按场景切块，每个场景吃透 10 句，出门就能用。",
+   "影子跟读法：放一句、跟一句、盖过原声，语感就这样磨出来。"]},
+  {t:"《心理学与生活》", a:"津巴多", c:"心理学", w:"系统入门心理学。", pages:688,
+   content:["心理学是研究行为与心智的科学，不是读心术。它用证据说话。",
+   "从感知、记忆到动机、人格，每个模块都给你一把理解“人为什么这样”的钥匙。",
+   "学着用实验的眼光看生活：相关性不等于因果，亲眼所见也可能被大脑骗。"]},
+  {t:"《纳瓦尔宝典》", a:"纳瓦尔", c:"个人成长", w:"财富与幸福的底层逻辑。", pages:256,
+   content:["财富不是时间的贩卖，而是“睡觉时也在为你赚钱”的资产。杠杆=代码/媒体/资本/人力。",
+   "找到你的“专长”：你天生能做、别人觉得费劲的事。把它产品化。",
+   "幸福是一种技能，可以练习。欲望减一分，满足多一寸。"]},
 ];
+
 const AI_NEWS = [
   {t:"GitHub Copilot 新增大模型Agent模式", src:"GitHub", link:"https://github.com/features/copilot"},
   {t:"Claude 推出电脑操作能力更新", src:"Anthropic", link:"https://www.anthropic.com/news"},
@@ -479,8 +514,14 @@ const SPOKEN = [
   {en:"I'll take it offline and get back to you.", cn:"我线下处理后再回复你。", syn:"I'll follow up privately."},
 ];
 const ESSAYS = [
-  {title:"On Persistence", en:"If you allow yourself to fall behind once, you will fall behind countless times. Success favors those who show up every single day, even when motivation fades.", cn:"如果你允许自己落后一次，就会落后无数次。成功偏爱那些每天都出现的人，即使动力消退。", vocab:[{w:"persistence",ph:"/pəˈsɪstəns/",cn:"坚持"},{w:"motivation",ph:"/ˌməʊtɪˈveɪʃn/",cn:"动力"}]},
-  {title:"On Habits", en:"Atomic habits compound. A one percent improvement each day seems tiny, yet over a year it doubles your ability.", cn:"原子习惯会复利。每天提升百分之一看似微小，一年却能翻倍你的能力。", vocab:[{w:"compound",ph:"/ˈkɒmpaʊnd/",cn:"复利；复合"},{w:"tiny",ph:"/ˈtaɪni/",cn:"微小的"}]},
+  {title:"On Persistence", en:"If you allow yourself to fall behind once, you will fall behind countless times. Success favors those who show up every single day, even when motivation fades.", cn:"如果你允许自己落后一次，就会落后无数次。成功偏爱那些每天都出现的人，即使动力消退。",
+   vocab:[{w:"persistence",ph:"/pəˈsɪstəns/",pos:"n.",cn:"坚持；毅力",eg:"Persistence is the key to success."},{w:"motivation",ph:"/ˌməʊtɪˈveɪʃn/",pos:"n.",cn:"动力；动机",eg:"She lacks the motivation to study."}],
+   grammar:"句式 1：条件句 If you allow ... , you will ...（真实条件，主将从现）。句式 2：who 引导的定语从句，修饰 those。可仿写：If you skip one workout, you will skip many.",
+   alt:["If you let yourself lag once, you'll lag forever.","Allow yourself to fall behind once, and you'll keep falling behind."]},
+  {title:"On Habits", en:"Atomic habits compound. A one percent improvement each day seems tiny, yet over a year it doubles your ability.", cn:"原子习惯会复利。每天提升百分之一看似微小，一年却能翻倍你的能力。",
+   vocab:[{w:"compound",ph:"/ˈkɒmpaʊnd/",pos:"v./n.",cn:"复利；复合",eg:"Interest compounds over time."},{w:"tiny",ph:"/ˈtaɪni/",pos:"adj.",cn:"微小的",eg:"a tiny step"}],
+   grammar:"句式 1：名词作主语独立成句（Atomic habits compound.）制造强调。句式 2：seems ... , yet ... 转折并列，yet = but 更书面。可仿写：Small savings compound.",
+   alt:["Tiny daily habits add up.","Small 1% gains stack up and double your skill in a year."]},
 ];
 const ZH2EN = [
   {zh:"谢谢你抽时间帮我。", ans:"Thank you for taking the time to help me.", refs:["I appreciate you making time for me.","Thanks for your time helping."]},
@@ -665,12 +706,8 @@ function p_news(){
     <h2 class="mod">📰 热点新闻 <span class="gear" onclick="openSettings('news')">⚙</span></h2>
     ${checkinHTML('news','读完今日要闻',5)}
     <div class="card">
-      <h3>📺 每日观看提醒</h3>
-      <div class="tag-line">《新闻联播》每天 <b>19:00</b> CCTV-1 / 央视新闻客户端，建议晚饭时看。</div>
-      <div class="note">下面为当日国内外重大资讯提炼（来源：新浪滚动，真实）。</div>
-    </div>
-    <div class="card">
-      <h3>🔥 今日要闻 <span class="tag">${REMOTE?REMOTE.date:'—'}</span></h3>
+      <h3>🔥 今日要点总结 <span class="tag">${REMOTE?REMOTE.date:'—'}</span></h3>
+      <div class="note">以下为当日国内外重大资讯提炼（来源：新浪滚动，真实）：</div>
       ${items.length? items.slice(0,12).map(it=>`<div class="item-row"><div class="thumb">📰</div><div class="meta"><div class="t">${esc(it[0]||it.title||'')}</div><div class="d">${esc((it[1]||it.desc||'').slice(0,60))}</div></div></div>`).join("") : '<div class="empty">今日要闻生成中…</div>'}
     </div>
     <div class="card">
@@ -693,6 +730,11 @@ function p_ai(){
       <h3>🚀 今日 AI / 科技快讯（精选）</h3>
       ${list.map(x=>`<div class="item-row"><div class="thumb">🤖</div><div class="meta"><div class="t">${esc(x.t)}</div><div class="d">${esc(x.src)}</div></div><span class="linkbtn" onclick="window.open('${x.link}','_blank')">打开↗</span></div>`).join("")}
       <div class="note" style="margin-top:6px">视频类资源可在「拍照剪辑」「英语学习·视频」中获取可跳转链接。</div>
+    </div>
+    <div class="card">
+      <h3>📝 今日 AI 学习提炼总结</h3>
+      <div class="tag-line">今日聚焦：${list.slice(0,3).map(x=>x.t).join('；')}。</div>
+      <div class="tag-line">建议优先了解 <b>${list[0]?list[0].src:''}</b> 的动态，迁移到采购工作的 <b>比价分析 / 供应商评估 / 成本拆解</b> 环节，每周 3~5 小时稳步推进。</div>
     </div>`;
 }
 
@@ -750,30 +792,75 @@ function p_review(){
     </div>`;
 }
 
+/* ---------- 阅读进度 / 摘抄 ---------- */
+function getProg(t){ const p=DB.get("reading_prog",{}); const v=p[t]; if(typeof v==='number') return v; return v&&v.page!=null? Math.max(0,Math.min(100,Math.round(v.page/(v.total||1)*100))):0; }
+function setPage(t, page, total){ const p=DB.get("reading_prog",{}); const pg=Math.max(0,Math.min(page,total)); p[t]={page:pg,total}; DB.set("reading_prog",p); }
+function getExcerpts(t){ const all=DB.get("excerpts",{}); return all[t]||[]; }
+function addExcerpt(t,s){ if(!s.trim()){toast('摘抄不能为空');return false;} const all=DB.get("excerpts",{}); all[t]=(all[t]||[]).concat(s.trim()); DB.set("excerpts",all); return true; }
+function delExcerpt(t,i){ const all=DB.get("excerpts",{}); all[t]=(all[t]||[]).filter((_,k)=>k!==i); DB.set("excerpts",all); }
+function editExcerpt(t,i,s){ const all=DB.get("excerpts",{}); all[t][i]=s.trim(); DB.set("excerpts",all); }
+function renderExcerptList(t){
+  const box=document.getElementById("excerpt_list"); if(!box) return;
+  const arr=getExcerpts(t);
+  box.innerHTML = arr.length? arr.map((s,i)=>`<div class="item-row"><div class="thumb">✍️</div><div class="meta"><div class="d">${esc(s)}</div></div>
+    <span class="linkbtn" onclick="exEd('${esc(t)}',${i})">编辑</span><span class="linkbtn danger" onclick="delExcerpt('${esc(t)}',${i});renderExcerptList('${esc(t)}');toast('已删除')">删除</span></div>`).join("")
+    : '<div class="empty">还没有摘抄，读到好句记下来 ✦</div>';
+}
+function exEd(t,i){ const cur=getExcerpts(t)[i]; const box=document.getElementById("excerpt_list"); if(!box) return;
+  const items=Array.from(box.querySelectorAll(".item-row")); const node=items[i]; if(!node) return;
+  node.outerHTML=`<div class="item-row" data-idx="${i}"><div class="thumb">✍️</div><div class="meta"><textarea class="textarea" id="ex_ed_${i}" rows="2" style="width:100%">${esc(cur)}</textarea></div>
+    <span class="linkbtn" onclick="editExcerpt('${esc(t)}',${i},document.getElementById('ex_ed_${i}').value);renderExcerptList('${esc(t)}');toast('已保存')">保存</span></div>`;
+}
+function openReading(t){
+  const b=BOOKS.find(x=>x.t===t); if(!b) return;
+  const total=b.pages||200; let pr=DB.get("reading_prog",{})[t]; let page = (pr&&pr.page!=null)? pr.page : 0;
+  if(typeof pr==='number'){ page=Math.round(pr/100*total); }
+  const pct = total? Math.round(page/total*100):0;
+  const paras=(b.content||["（暂无试读内容）"]).map(p=>`<p style="margin:0 0 12px;line-height:1.9">${esc(p)}</p>`).join("");
+  const ex=getExcerpts(t);
+  const html=`<span class="close" onclick="closeModal()">✕</span>
+    <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><h3 style="margin:0">📖 ${esc(b.t)}</h3><span class="pill">${esc(b.c)}</span><span class="muted">${esc(b.a)} · 共约${total}页</span></div>
+    <div class="progress" style="margin:10px 0 4px"><i id="rd_bar" style="width:${pct}%"></i></div>
+    <div class="muted" style="font-size:12px">已读 ${page}/${total} 页 · 进度 ${pct}%</div>
+    <div id="rd_content" style="max-height:42vh;overflow:auto;margin:12px 0;padding:14px;background:var(--paper2);border-radius:12px;border:1px solid var(--line)">${paras}</div>
+    <div class="row" style="gap:6px"><span class="muted" style="font-size:13px">读到第</span><input id="rd_page" class="input" type="number" min="0" max="${total}" value="${page}" style="width:90px"/><span class="muted" style="font-size:13px">页</span>
+      <button class="btn sm" onclick="applyPage('${esc(t)}',${total})">记录进度</button>
+      <button class="btn sm ghost" onclick="markRead('${esc(t)}');closeModal();toast('已读完 ✦')">标记读完✓</button></div>
+    <div class="card" style="margin-top:14px"><h3>✍️ 好句摘抄</h3>
+      <div class="note">阅读中遇到好句，随手记下来，长期就是你的金句库。</div>
+      <textarea id="ex_input" class="textarea" rows="2" placeholder="输入一句想收藏的话…"></textarea>
+      <div class="row" style="margin-top:6px"><button class="btn sm" onclick="if(addExcerpt('${esc(t)}',document.getElementById('ex_input').value)){document.getElementById('ex_input').value='';renderExcerptList('${esc(t)}');toast('已摘抄 ✦');}">添加摘抄</button>
+        <span class="pill">${ex.length} 条</span></div>
+      <div id="excerpt_list" style="margin-top:10px">${ex.length?ex.map((s,i)=>`<div class="item-row"><div class="thumb">✍️</div><div class="meta"><div class="d">${esc(s)}</div></div><span class="linkbtn" onclick="exEd('${esc(t)}',${i})">编辑</span><span class="linkbtn danger" onclick="delExcerpt('${esc(t)}',${i});renderExcerptList('${esc(t)}');toast('已删除')">删除</span></div>`).join(""):'<div class="empty">还没有摘抄，读到好句记下来 ✦</div>'}</div>
+    </div>`;
+  openModal(html);
+}
+function applyPage(t,total){ const v=parseInt(document.getElementById("rd_page").value)||0; setPage(t,v,total); const pct=total?Math.round(v/total*100):0;
+  const bar=document.getElementById("rd_bar"); if(bar) bar.style.width=pct+"%"; toast("已记录 "+v+" 页 · "+pct+"%"); p_reading(); }
+function markRead(t){ setPage(t,(BOOKS.find(x=>x.t===t)||{}).pages||200,(BOOKS.find(x=>x.t===t)||{}).pages||200); toast("已标记读完 ✦"); p_reading(); }
+
 function p_reading(){
   const m=document.getElementById("mod_reading");
   const list=pick(BOOKS,3,1);
-  const prog=DB.get("reading_prog",{});
   m.innerHTML = `
     <h2 class="mod">📚 每日阅读 <span class="gear" onclick="openSettings('reading')">⚙</span></h2>
     ${checkinHTML('reading','读完今日推荐',5)}
     <div class="card">
-      <h3>📖 今日推荐阅读</h3>
-      ${list.map(b=>{
-        const p=prog[b.t]||0;
-        return `<div class="item-row"><div class="thumb">📕</div><div class="meta"><div class="t">${esc(b.t)} <span class="pill">${esc(b.c)}</span></div>
-          <div class="d">${esc(b.a)} · ${esc(b.w)}</div>
-          <div class="progress" style="margin-top:5px"><i style="width:${p}%"></i></div></div>
-          <span class="linkbtn" onclick="markRead('${esc(b.t)}')">${p>=100?'已读✓':'标记读'}</span></div>`;
+      <h3>📖 今日推荐阅读 <span class="tag">点书名进入阅读</span></h3>
+      ${list.map(b=>{ const pct=getProg(b.t); const ex=getExcerpts(b.t).length;
+        return `<div class="item-row" style="cursor:pointer" onclick="openReading('${esc(b.t)}')"><div class="thumb">📕</div><div class="meta"><div class="t">${esc(b.t)} <span class="pill">${esc(b.c)}</span></div>
+          <div class="d">${esc(b.a)} · ${esc(b.w)}${ex?' ｜ ✍️'+ex+'条摘抄':''}</div>
+          <div class="progress" style="margin-top:5px"><i style="width:${pct}%"></i></div>
+          <div class="muted" style="font-size:12px">进度 ${pct}%</div></div>
+          <span class="linkbtn" onclick="event.stopPropagation();openReading('${esc(b.t)}')">阅读↗</span></div>`;
       }).join("")}
+      <div class="note" style="margin-top:8px">每本书点开即读，读到第几页会自动记录；右侧「好句摘抄」可手动收藏，长期沉淀成你的金句库。</div>
     </div>
     <div class="card">
       <h3>🧭 阅读方向</h3>
       <div class="note">口语表达 · 人性 · 心理学 · 效率提升 · 个人成长。每天一本精读 + 一句摘抄，长期复利。</div>
     </div>`;
 }
-function markRead(t){ const p=DB.get("reading_prog",{}); p[t]=100; DB.set("reading_prog",p); toast("已标记读完 ✦"); p_reading(); }
-
 function p_english(){
   const m=document.getElementById("mod_english");
   const wb = (DB.get("settings",{}).wordbook)||"cet4";
@@ -814,9 +901,17 @@ function p_english(){
       </div>
     </div>
     <div class="subtab" id="en_1">
-      <div class="card"><h3>📚 单词本 <span class="tag">核心词合集·每日轮换</span></h3>
-        ${words.slice(0,12).map(wd=>`<div class="item-row"><div class="thumb">🔤</div><div class="meta"><div class="t">${esc(wd.w)} <span class="muted">${esc(wd.ph)}</span></div><div class="d">${esc(wd.cn)}</div></div>
+      <div class="card"><h3>📚 单词本 <span class="tag">核心词合集·可搜索</span></h3>
+        <div class="row" style="gap:6px;margin-bottom:8px"><input id="wb_search" class="input" placeholder="🔍 搜单词 / 中文意思…" oninput="wbSearch(this.value)" style="flex:1"/>
+          <span class="pill">${words.length} 词</span></div>
+        <div class="row" style="gap:6px;margin-bottom:8px">
+          <span class="chip ${wbFilter==='all'?'on':''}" data-f="all" onclick="wbFilter='all';wbSearch(document.getElementById('wb_search').value);syncChips()">全部</span>
+          <span class="chip ${wbFilter==='no'?'on':''}" data-f="no" onclick="wbFilter='no';wbSearch(document.getElementById('wb_search').value);syncChips()">不会的</span>
+          <span class="chip ${wbFilter==='fav'?'on':''}" data-f="fav" onclick="wbFilter='fav';wbSearch(document.getElementById('wb_search').value);syncChips()">已收藏</span></div>
+        <div id="wb_list">
+        ${words.map(wd=>`<div class="item-row" data-w="${(wd.w+' '+wd.cn).toLowerCase()}" data-word="${esc(wd.w)}"><div class="thumb">🔤</div><div class="meta"><div class="t">${esc(wd.w)} <span class="muted">${esc(wd.ph)} ${esc(wd.pos||'')}</span></div><div class="d">${esc(wd.cn)}</div></div>
           <span class="linkbtn" onclick="playTTS('${esc(wd.w)}');wf('${esc(wd.w)}','fav')">朗读/收藏</span></div>`).join("")}
+        </div>
       </div>
     </div>
     <div class="subtab" id="en_2">
@@ -830,15 +925,30 @@ function p_english(){
       </div>
     </div>
     <div class="subtab" id="en_4">
-      <div class="card"><h3>📝 每日作文</h3>
-        <div class="tag-line"><b>${essay.title}</b><br>${essay.en}<br><span class="muted">${essay.cn}</span></div>
-        <div class="note" style="margin-top:6px">重点词汇：</div>
-        ${essay.vocab.map(v=>`<div class="item-row"><div class="thumb">🔤</div><div class="meta"><div class="t">${esc(v.w)} <span class="muted">${esc(v.ph)}</span></div><div class="d">${esc(v.cn)}</div></div><button class="btn sm ghost" onclick="playTTS('${esc(v.w)}')">🔊</button></div>`).join("")}
+      <div class="card"><h3>📝 每日作文 · ${essay.title}</h3>
+        <div class="tag-line"><b>${essay.en}</b><br><span class="muted">${essay.cn}</span><br><button class="btn sm ghost" onclick="playTTS('${esc(essay.en)}')">🔊 朗读全文</button></div>
+        <div class="note" style="margin-top:8px">重点词汇（含词性 + 例句）：</div>
+        ${essay.vocab.map(v=>`<div class="item-row"><div class="thumb">🔤</div><div class="meta"><div class="t">${esc(v.w)} <span class="muted">${esc(v.ph)} ${esc(v.pos||'')}</span></div><div class="d">${esc(v.cn)} ｜ 例：${esc(v.eg||'')}</div></div><button class="btn sm ghost" onclick="playTTS('${esc(v.w)}')">🔊</button></div>`).join("")}
+        <div class="note" style="margin-top:8px">🧩 语法 & 句式拓展</div>
+        <div class="tag-line">${esc(essay.grammar||"仿写上面的句式，换主题多练几遍。")}</div>
+        <div class="note" style="margin-top:6px">💡 更多表达方式（同一意思，换种英文说）</div>
+        ${(essay.alt||[]).map(a=>`<div class="item-row"><div class="meta"><div class="d">${esc(a)}</div></div><button class="btn sm ghost" onclick="playTTS('${esc(a)}')">🔊</button></div>`).join("")}
       </div>
     </div>
     <div class="subtab" id="en_5">
-      <div class="card"><h3>🔁 中译英 · 每日5句</h3>
-        ${zh2en.map(z=>`<div class="item-row"><div class="thumb">🇨🇳</div><div class="meta"><div class="t">${esc(z.zh)}</div><div class="d">标准：${esc(z.ans)}</div><div class="d muted">参考：${z.refs.map(esc).join(' / ')}</div></div></div>`).join("")}
+      <div class="card"><h3>🔁 中译英 · 每日5句 <span class="tag">先译再看答案</span></h3>
+        ${zh2en.map((z,i)=>`<div class="item-row" style="display:block">
+          <div class="meta"><div class="t">🇨🇳 ${esc(z.zh)}</div></div>
+          <textarea id="zans_in_${i}" class="textarea" rows="2" placeholder="先自己翻译一遍，再点下方看答案…" style="margin-top:6px"></textarea>
+          <div class="row" style="margin-top:6px;gap:6px">
+            <button class="btn sm" id="zbtn_${i}" onclick="showZAns(${i})">查看参考答案</button>
+            <button class="btn sm ghost" onclick="playTTS(document.getElementById('zans_in_${i}').value)">🔊 朗读我的</button>
+          </div>
+          <div id="zans_${i}" style="display:none;margin-top:8px">
+            <div class="tag-line">✅ 标准答案：<b>${esc(z.ans)}</b> <button class="btn sm ghost" onclick="playTTS('${esc(z.ans)}')">🔊</button></div>
+            <div class="tag-line">📚 参考译文：${(z.refs||[]).map(esc).join(' ／ ')}</div>
+          </div>
+        </div>`).join("")}
       </div>
     </div>
     <div class="subtab" id="en_6">
@@ -864,6 +974,20 @@ function p_english(){
 }
 function enTab(i){ document.querySelectorAll("#en_tabs .tab").forEach((t,k)=>t.classList.toggle("active",k===i));
   for(let k=0;k<9;k++){ const s=document.getElementById("en_"+k); if(s) s.classList.toggle("active",k===i); } }
+let wbFilter="all";
+function wbSearch(q){ q=(q||"").toLowerCase(); const list=document.getElementById("wb_list"); if(!list) return;
+  Array.from(list.children).forEach(row=>{
+    const w=row.getAttribute("data-w")||"", word=row.getAttribute("data-word")||"";
+    const st=DB.get("wordstat",{})[word]||{};
+    let show = w.includes(q);
+    if(wbFilter==="no" && !st.no) show=false;
+    if(wbFilter==="fav" && !st.fav) show=false;
+    row.style.display = show?"":"none";
+  });
+}
+function syncChips(){ document.querySelectorAll("#en_1 .chip").forEach(c=>{ const f=c.getAttribute("data-f"); c.classList.toggle("on", f===wbFilter); }); }
+function showZAns(i){ const box=document.getElementById("zans_"+i); if(!box) return; const hide=box.style.display!=="none"; box.style.display=hide?"none":"block";
+  const btn=document.getElementById("zbtn_"+i); if(btn) btn.textContent=hide?"查看参考答案":"收起答案"; }
 const WF=DB.get("wordstat",{}); // {word:{master,fuzzy,no,fav}}
 function wf(w, act){
   const st=DB.get("wordstat",{}); const o=st[w]||{master:0,fuzzy:0,no:0,fav:0};
@@ -892,9 +1016,11 @@ function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.fl
 function p_outfit(){
   const m=document.getElementById("mod_outfit");
   const tips=pick(OUTFIT_TIPS,4,dateSeed()%3);
-  const wardrobe=DB.get("wardrobe",[]);
+  let wardrobe=DB.get("wardrobe",[]);
+  wardrobe=wardrobe.map(x=>x.id?x:{...x,id:"w"+Math.random().toString(36).slice(2,9)}); DB.set("wardrobe",wardrobe);
   const wth=(REMOTE&&REMOTE.weather)||{};
   const rec = wth.city? `当前${esc(wth.city)} ${wth.today?Math.round(wth.today.temp):''}° ${esc((wth.today&&wth.today.text)||'')}，建议${wth.today&&wth.today.temp<15?'内搭+外套，梨形选A字下装':'轻薄透气，高腰显比例'}。`:'设置城市后按天气推荐。';
+  const CAT=['上装','下装','裙装','外套','鞋履','配饰','内衣'], SEASON=['春','夏','秋','冬','四季'], COLOR=['黑','白','灰','米','棕','蓝','红','绿','粉','其他'];
   m.innerHTML = `
     <h2 class="mod">👗 电子穿搭 <span class="gear" onclick="openSettings('outfit')">⚙</span></h2>
     ${checkinHTML('outfit','学完今日穿搭',5)}
@@ -909,14 +1035,56 @@ function p_outfit(){
     <div class="card">
       <h3>🧺 电子衣橱 <span class="pill">${wardrobe.length} 件</span></h3>
       <div class="wardrobe-grid">
-        ${wardrobe.length? wardrobe.slice(0,9).map(w=>`<div class="wcell"><div class="ph">${w.photo||'👕'}</div>${esc(w.name||'衣物')}</div>`).join("") : '<div class="empty">还没有衣物，点下面添加</div>'}
+        ${wardrobe.length? wardrobe.map(w=>`<div class="wcell"><div class="ph">${w.photo?('<img src="'+esc(w.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px"/>'):'👕'}</div>
+          <div class="wt">${esc(w.name||'衣物')}</div>
+          <div class="wm">${[w.cat,w.color,w.season].filter(Boolean).join('·')||''} ${w.qty>1?('×'+w.qty):''}</div>
+          <div class="row" style="gap:4px;margin-top:4px;justify-content:center"><span class="linkbtn" onclick="editWardrobe('${w.id}')">编辑</span><span class="linkbtn danger" onclick="delWardrobe('${w.id}')">删除</span></div>
+        </div>`).join("") : '<div class="empty">还没有衣物，点下面添加</div>'}
       </div>
-      <div class="row" style="margin-top:10px"><input id="w_name" class="input" placeholder="衣物名称" style="flex:1"/><button class="btn sm" onclick="addWardrobe()">添加</button></div>
-      <div class="note" style="margin-top:6px">支持记录信息、保存搭配、编辑删除（增强版可上传照片，后续接入）。</div>
+      <div class="note" style="margin-top:10px">➕ 添加衣物</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap">
+        <input id="w_name" class="input" placeholder="名称" style="flex:1;min-width:90px"/>
+        <select id="w_cat" class="input" style="width:90px">${CAT.map(o=>`<option>${o}</option>`).join('')}</select>
+        <select id="w_season" class="input" style="width:80px">${SEASON.map(o=>`<option>${o}</option>`).join('')}</select>
+        <select id="w_color" class="input" style="width:80px">${COLOR.map(o=>`<option>${o}</option>`).join('')}</select>
+      </div>
+      <div class="row" style="gap:6px;margin-top:6px">
+        <input id="w_material" class="input" placeholder="材质(棉/麻/羊毛…)" style="flex:1"/>
+        <input id="w_qty" class="input" type="number" min="1" value="1" placeholder="数量" style="width:70px"/>
+      </div>
+      <div class="row" style="gap:6px;margin-top:6px;align-items:center">
+        <input type="file" id="w_photo" accept="image/*" class="input" style="flex:1" onchange="wPhotoPreview(this,'w')"/>
+        <button class="btn sm" onclick="addWardrobe()">添加</button>
+      </div>
+      <div class="note" style="margin-top:6px">可记录 类别 / 季节 / 颜色 / 材质 / 数量，并上传对应图片；每条都可编辑、删除。</div>
     </div>`;
 }
-function addWardrobe(){ const n=document.getElementById("w_name").value.trim(); if(!n){toast('先填名称');return;}
-  const w=DB.get("wardrobe",[]); w.push({name:n,photo:'👕'}); DB.set("wardrobe",w); toast('已添加'); p_outfit(); }
+function wPhotoPreview(input, pref){ const f=input.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ const hid=pref+'_photo_data'; let el=document.getElementById(hid); if(!el){ el=document.createElement('input'); el.type='hidden'; el.id=hid; input.parentNode.appendChild(el); } el.value=e.target.result; toast('图片已选 ✓'); }; r.readAsDataURL(f); }
+function addWardrobe(){ const name=document.getElementById("w_name").value.trim(); if(!name){toast('先填名称');return;}
+  const photo=(document.getElementById("w_photo_data")||{}).value||"";
+  const item={id:"w"+Date.now(), name, cat:document.getElementById("w_cat").value, season:document.getElementById("w_season").value, color:document.getElementById("w_color").value, material:document.getElementById("w_material").value.trim(), qty:parseInt(document.getElementById("w_qty").value)||1, photo};
+  const w=DB.get("wardrobe",[]); w.push(item); DB.set("wardrobe",w); toast('已添加'); p_outfit(); }
+function delWardrobe(id){ let w=DB.get("wardrobe",[]); w=w.filter(x=>x.id!==id); DB.set("wardrobe",w); toast('已删除'); p_outfit(); }
+function editWardrobe(id){ const w=DB.get("wardrobe",[]).find(x=>x.id===id); if(!w) return;
+  const CAT=['上装','下装','裙装','外套','鞋履','配饰','内衣'], SEASON=['春','夏','秋','冬','四季'], COLOR=['黑','白','灰','米','棕','蓝','红','绿','粉','其他'];
+  const opt=(arr,sel)=>arr.map(o=>`<option${o===sel?' selected':''}>${o}</option>`).join('');
+  const html=`<span class="close" onclick="closeModal()">✕</span><h3>✏️ 编辑衣物</h3>
+   <input id="ew_name" class="input" value="${esc(w.name||'')}" placeholder="名称" style="margin:6px 0;width:100%"/>
+   <div class="row" style="gap:6px;flex-wrap:wrap">
+     <select id="ew_cat" class="input" style="width:90px">${opt(CAT,w.cat)}</select>
+     <select id="ew_season" class="input" style="width:80px">${opt(SEASON,w.season)}</select>
+     <select id="ew_color" class="input" style="width:80px">${opt(COLOR,w.color)}</select>
+   </div>
+   <div class="row" style="gap:6px;margin-top:6px"><input id="ew_material" class="input" placeholder="材质" value="${esc(w.material||'')}" style="flex:1"/><input id="ew_qty" class="input" type="number" min="1" value="${w.qty||1}" style="width:70px"/></div>
+   <div class="row" style="gap:6px;margin-top:6px;align-items:center"><input type="file" id="ew_photo" accept="image/*" class="input" style="flex:1" onchange="wPhotoPreview(this,'ew')"/><button class="btn sm" onclick="saveWardrobe('${id}')">保存</button></div>
+   <div class="note" style="margin-top:6px">当前图片：${w.photo?('<img src="'+esc(w.photo)+'" style="max-height:90px;border-radius:8px"/>'):'无'}</div>`;
+  openModal(html);
+}
+function saveWardrobe(id){ const w=DB.get("wardrobe",[]); const it=w.find(x=>x.id===id); if(!it) return;
+  it.name=document.getElementById("ew_name").value.trim()||it.name; it.cat=document.getElementById("ew_cat").value; it.season=document.getElementById("ew_season").value; it.color=document.getElementById("ew_color").value;
+  it.material=document.getElementById("ew_material").value.trim(); it.qty=parseInt(document.getElementById("ew_qty").value)||1;
+  const pd=(document.getElementById("ew_photo_data")||{}).value; if(pd) it.photo=pd;
+  DB.set("wardrobe",w); closeModal(); toast('已保存'); p_outfit(); }
 
 function p_health(){
   const m=document.getElementById("mod_health");
@@ -984,14 +1152,26 @@ function p_photo(){
 
 function p_money(){
   const m=document.getElementById("mod_money");
-  const tx=DB.get("tx",[]);
+  let tx=DB.get("tx",[]);
+  tx=tx.map(x=>x.id?x:{...x,id:'t'+Math.random().toString(36).slice(2,9)}); DB.set("tx",tx);
+  const month=todayStr().slice(0,7);
   const todayTx=tx.filter(x=>x.date===todayStr());
-  const monthTx=tx.filter(x=>x.date&&x.date.startsWith(todayStr().slice(0,7)));
+  const monthTx=tx.filter(x=>x.date&&x.date.startsWith(month));
   const inSum=monthTx.filter(x=>x.type==='in').reduce((s,x)=>s+(+x.amt||0),0);
   const outSum=monthTx.filter(x=>x.type==='out').reduce((s,x)=>s+(+x.amt||0),0);
+  const budget=DB.get("budget",{})[month]||0;
+  const remain=Math.round(budget-outSum); const pct=budget>0?Math.min(100,Math.round(outSum/budget*100)):0;
+  const over=budget>0 && outSum>budget;
   m.innerHTML = `
     <h2 class="mod">💰 生活记账 <span class="gear" onclick="openSettings('money')">⚙</span></h2>
     ${checkinHTML('money','记一笔或导入账单',5)}
+    <div class="card">
+      <h3>🎯 月度预算 <span class="tag">${month}</span></h3>
+      <div class="row" style="gap:6px"><input id="bud_in" class="input" type="number" placeholder="设本月预算" value="${budget||''}" style="flex:1"/><button class="btn sm" onclick="setBudget()">设定</button></div>
+      ${budget>0? `<div class="progress" style="margin-top:8px"><i style="width:${pct}%;background:${over?'var(--primary)':'var(--ok)'}"></i></div>
+        <div class="note" style="margin-top:6px">已花 ${outSum.toFixed(0)} / 预算 ${budget.toFixed(0)}（${pct}%）。${over? `<b style="color:var(--primary)">⚠️ 已超预算 ${Math.round(outSum-budget)} 元，注意控支！</b>`:`还剩 ${remain} 元（${100-pct}%）`}</div>`
+      : '<div class="note" style="margin-top:6px">设定预算后，超支会自动提醒。</div>'}
+    </div>
     <div class="card">
       <h3>➕ 手动记一笔</h3>
       <div class="row" style="gap:6px">
@@ -1009,21 +1189,38 @@ function p_money(){
       <div class="note" style="margin-top:6px">自动识别列头（交易时间/对方/商品/收支/金额），按美团→餐饮、滴滴→交通等关键词分类；兼容 2026-07-25 / 2026/7/25 / 2026年7月25日 / Excel序列号；异常数据可导出排查。</div>
     </div>
     <div class="card">
-      <h3>📊 本月汇总 <span class="tag">${todayStr().slice(0,7)}</span></h3>
+      <h3>📊 本月汇总 <span class="tag">${month}</span></h3>
       <div class="grid2">
         <div class="stat"><div class="n" style="color:var(--ok)">${inSum.toFixed(0)}</div><div class="l">收入</div></div>
         <div class="stat"><div class="n" style="color:var(--warn)">${outSum.toFixed(0)}</div><div class="l">支出</div></div>
       </div>
-      <div class="note" style="margin-top:6px">今日 ${todayTx.length} 笔。${outSum>inSum*0.8?'⚠️ 支出接近收入，注意控支。':'收支健康。'}</div>
+      <div class="note" style="margin-top:6px">今日 ${todayTx.length} 笔。${over?'⚠️ 已超预算，注意控支。':(outSum>inSum*0.8?'⚠️ 支出接近收入，注意控支。':'收支健康。')}</div>
     </div>
     <div class="card"><h3>🧾 最近记录</h3>
-      ${tx.length? tx.slice().reverse().slice(0,8).map(x=>`<div class="item-row"><div class="thumb">${x.type==='in'?'💵':'🧾'}</div><div class="meta"><div class="t">${esc(x.cat||'其他')} · ${esc(x.note||'')}</div><div class="d">${esc(x.date||'')}</div></div><span class="pill ${x.type==='in'?'green':''}">${x.type==='in'?'+':'-'}${x.amt}</span></div>`).join("") : '<div class="empty">还没有记录</div>'}
+      ${tx.length? tx.slice().reverse().slice(0,10).map(x=>`<div class="item-row"><div class="thumb">${x.type==='in'?'💵':'🧾'}</div><div class="meta"><div class="t">${esc(x.cat||'其他')} · ${esc(x.note||'')}</div><div class="d">${esc(x.date||'')}</div></div>
+        <span class="pill ${x.type==='in'?'green':''}">${x.type==='in'?'+':'-'}${x.amt}</span>
+        <span class="linkbtn" onclick="editTx('${x.id}')">编辑</span><span class="linkbtn danger" onclick="delTx('${x.id}')">删除</span></div>`).join("") : '<div class="empty">还没有记录</div>'}
     </div>`;
 }
+function setBudget(){ const v=parseFloat(document.getElementById("bud_in").value); const b=DB.get("budget",{}); const month=todayStr().slice(0,7);
+  if(!v){ toast('填预算金额'); return; } b[month]=v; DB.set("budget",b); toast("已设本月预算 "+v+" 元"); p_money(); }
 function addTx(){ const type=document.getElementById("tx_type").value; const cat=document.getElementById("tx_cat").value.trim()||"其他";
   const amt=parseFloat(document.getElementById("tx_amt").value); if(!amt){toast('填金额');return;}
   const note=document.getElementById("tx_note").value.trim();
-  const tx=DB.get("tx",[]); tx.push({date:todayStr(),type,cat,amt,note}); DB.set("tx",tx); toast("已记录"); p_money(); }
+  const tx=DB.get("tx",[]); tx.push({id:'t'+Date.now()+Math.random().toString(36).slice(2,5),date:todayStr(),type,cat,amt,note}); DB.set("tx",tx); toast("已记录"); p_money(); }
+function delTx(id){ let tx=DB.get("tx",[]); tx=tx.filter(x=>x.id!==id); DB.set("tx",tx); toast("已删除"); p_money(); }
+function editTx(id){ const tx=DB.get("tx",[]); const it=tx.find(x=>x.id===id); if(!it) return;
+  const html=`<span class="close" onclick="closeModal()">✕</span><h3>✏️ 编辑记录</h3>
+   <div class="row" style="gap:6px"><select id="et_type" class="input" style="width:80px"><option value="out"${it.type==='out'?' selected':''}>支出</option><option value="in"${it.type==='in'?' selected':''}>收入</option></select>
+     <input id="et_cat" class="input" value="${esc(it.cat||'')}" placeholder="分类" style="flex:1"/><input id="et_amt" class="input" value="${it.amt}" style="width:90px"/></div>
+   <input id="et_note" class="input" value="${esc(it.note||'')}" placeholder="备注" style="margin-top:6px"/>
+   <div class="row" style="margin-top:8px;gap:6px"><button class="btn sm" onclick="saveTx('${id}')">保存</button><button class="btn sm ghost" onclick="delTx('${id}')">删除</button></div>`;
+  openModal(html);
+}
+function saveTx(id){ const tx=DB.get("tx",[]); const it=tx.find(x=>x.id===id); if(!it) return;
+  it.type=document.getElementById("et_type").value; it.cat=document.getElementById("et_cat").value.trim()||"其他";
+  const a=parseFloat(document.getElementById("et_amt").value); if(a) it.amt=a; it.note=document.getElementById("et_note").value.trim();
+  DB.set("tx",tx); closeModal(); toast("已保存"); p_money(); }
 
 /* 账单导入解析（CSV/Excel文本；Excel二进制需后端，此处支持CSV与文本） */
 function importBill(){
@@ -1078,10 +1275,49 @@ function exportBad(){
 }
 
 /* ============================================================
+   数据备份 / 退出自动保存
+   ============================================================ */
+function autoSaveAll(){ try{
+  if(document.getElementById("plan_today")) savePlan('today');
+  if(document.getElementById("plan_week")) savePlan('week');
+  if(document.getElementById("plan_month")) savePlan('month');
+  if(document.getElementById("body_note")) saveBody();
+}catch(e){} }
+function exportBackup(){
+  const data={}; let n=0;
+  for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.indexOf("yiyi_")===0){ try{ data[k]=JSON.parse(localStorage.getItem(k)); }catch(e){ data[k]=localStorage.getItem(k); } n++; } }
+  const payload={app:"壹壹",version:1,exportedAt:new Date().toISOString(),data};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="壹壹-数据备份-"+todayStr()+".json"; document.body.appendChild(a); a.click(); a.remove();
+  toast("已导出 "+n+" 项数据备份 ✦");
+}
+function importBackup(file){ if(!file) return; const r=new FileReader();
+  r.onload=function(e){ try{ const o=JSON.parse(e.target.result); const src=o.data||o; let n=0;
+    for(const k in src){ if(k.indexOf("yiyi_")===0){ const v=src[k]; localStorage.setItem(k, typeof v==="object"?JSON.stringify(v):String(v)); n++; } }
+    toast("已恢复 "+n+" 项，正在刷新…"); initWelcome(); renderCoins(); renderNav(); renderContent();
+  }catch(err){ toast("备份文件解析失败"); } };
+  r.readAsText(file);
+}
+function openBackup(){
+  const html=`<span class="close" onclick="closeModal()">✕</span>
+   <h3>💾 数据备份</h3>
+   <div class="note">所有记录保存在本机浏览器（localStorage）。换设备 / 清缓存前建议导出；重装或换手机后可导入恢复。</div>
+   <button class="btn" style="margin-top:10px;width:100%" onclick="exportBackup()">⬇️ 一键导出全部数据备份</button>
+   <div class="row" style="margin-top:10px"><button class="btn ghost" style="flex:1" onclick="document.getElementById('backup_file2').click()">⬆️ 导入恢复备份</button>
+     <input type="file" id="backup_file2" accept=".json" style="display:none" onchange="importBackup(this.files[0]);this.value='';closeModal()"/></div>
+   <div class="note" style="margin-top:10px">🛡️ 退出或切后台时，当日计划与身体记录会自动保存，无需每次手动点保存。</div>`;
+  openModal(html);
+}
+
+/* ============================================================
    顶栏交互 + 初始化
    ============================================================ */
 document.getElementById("btn_collapse").onclick=()=>{ const c=!DB.get("navCollapsed",false); DB.set("navCollapsed",c); renderNav(); };
 document.getElementById("btn_edit").onclick=()=>{ editing=!editing; if(!editing) DB.set("order",getOrder()); renderNav(); toast(editing?'编辑模式：拖动排序，完成后点 ✥':'已保存模块顺序'); };
+document.getElementById("btn_backup").onclick=()=>openBackup();
+window.addEventListener("pagehide", autoSaveAll);
+window.addEventListener("beforeunload", autoSaveAll);
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") autoSaveAll(); });
 
 function loadRemote(){
   fetch('data.json').then(r=>r.json()).then(d=>{ REMOTE=d; renderContent(); }).catch(e=>{ renderContent(); });
