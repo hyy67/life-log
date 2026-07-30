@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-私人生活台 · 数据源抓取脚本（GitHub Pages + Actions 版）
-- 每日定时运行，产出 data.json 供前端读取
-- 指数：新浪（GBK，稳定）
-- 新闻：新浪财经滚动（UTF-8，真实）
-- 板块：从当日真实新闻里提取「热门行业」热度（东方财富在数据中心IP常被拦，故改用此法）
-- 英语：默认内置示例；若配置 ENGLISH_RSS 则自动抓取公众号 RSS 镜像
+壹壹工作台 · 数据源抓取脚本（GitHub Pages + Actions 版）
+- 指数：新浪（GBK，稳定真实）
+- 新闻：新浪财经滚动（UTF-8，真实）→ 分类为 hot/macro/livelihood/finance
+- 板块：从当日真实新闻提取热门行业热度
+- 天气：Open-Meteo（免密钥，真实）
 依赖：标准库即可（urllib）
 """
 import json, urllib.request, urllib.error, urllib.parse, datetime, re, sys, os
@@ -54,13 +53,11 @@ def fetch_indices():
         return out, False
     except Exception as e:
         print("indices fail:", e, file=sys.stderr)
-        return [
-            {"name":"上证综指","value":0,"pct":0},
-            {"name":"深证成指","value":0,"pct":0},
-            {"name":"创业板指","value":0,"pct":0},
-        ], True
+        return [{"name":"上证综指","value":0,"pct":0},
+                {"name":"深证成指","value":0,"pct":0},
+                {"name":"创业板指","value":0,"pct":0}], True
 
-# ---------- 2. 行业板块：从当日新闻提取热门行业 ----------
+# ---------- 2. 行业板块：从当日新闻提取热门行业热度 ----------
 SECTORS = ["人工智能","半导体","芯片","集成电路","新能源","光伏","储能","锂电","锂电池",
            "新能源车","汽车","医药","创新药","消费","白酒","食品饮料","银行","地产",
            "房地产","券商","保险","红利","高股息","军工","机器人","算力","数字经济",
@@ -75,123 +72,56 @@ def fetch_boards(news_raw):
     top = sorted(cnt.items(), key=lambda x: -x[1])[:8]
     if top:
         return [{"name": s, "pct": c, "_demo": False} for s, c in top], False
-    # 兜底：无新闻时给一个静态关注方向
-    return [
-        {"name":"人工智能（软硬件）","pct":0,"_demo":True},
-        {"name":"红利/高股息","pct":0,"_demo":True},
-        {"name":"半导体","pct":0,"_demo":True},
-    ], True
+    return [{"name":"人工智能（软硬件）","pct":0,"_demo":True},
+            {"name":"红利/高股息","pct":0,"_demo":True},
+            {"name":"半导体","pct":0,"_demo":True}], True
 
-# ---------- 3. 股市精简新闻（新浪滚动）----------
-def _classify(title):
-    if any(k in title for k in ["美联储","央行","降息","加息","货币","汇率","通胀"]):
-        return "央行动态"
-    if any(k in title for k in ["A股","沪","深","财报","GDP","财政","经济","证监会","交易所","IPO"]):
-        return "国内财经"
-    return "全球宏观"
+# ---------- 3. 新闻分类（新浪滚动）----------
+def _bucket(title):
+    if any(k in title for k in ["美联储","央行","降息","加息","货币","汇率","通胀","地缘"]):
+        return "macro"
+    if any(k in title for k in ["A股","沪","深","财报","GDP","财政","证监会","交易所","IPO","股市","基金"]):
+        return "finance"
+    if any(k in title for k in ["民生","教育","医疗","就业","消费","房价","养老","社保","菜价"]):
+        return "livelihood"
+    return "hot"
 
 def fetch_news():
-    key = os.environ.get("NEWS_API_KEY")
-    api = (os.environ.get("NEWS_API") or "sina").lower()
-    out = {"全球宏观": [], "央行动态": [], "国内财经": []}
+    out = {"hot": [], "macro": [], "livelihood": [], "finance": []}
     raw = []
     try:
-        if key and api == "juhe":
-            txt = get("https://v.juhe.cn/toutiao/index?key=%s&type=caijing" % key)
-            obj = json.loads(txt)
-            lst = (obj.get("result") or {}).get("data") or []
-            if lst:
-                for x in lst:
-                    t = x.get("title", "")
-                    c = strip_tags(x.get("content") or x.get("title") or "")
-                    raw.append(t + " " + c)
-                    out.setdefault(_classify(t), []).append([t[:40], c[:60] or t[:60]])
-                _trim(out)
-                return out, False, raw
-        if key and api == "tianapi":
-            txt = get("https://api.tianapi.com/caijing/?key=%s" % key)
-            obj = json.loads(txt)
-            lst = obj.get("newslist") or []
-            if lst:
-                for x in lst:
-                    t = x.get("title", "")
-                    c = strip_tags(x.get("description") or x.get("title") or "")
-                    raw.append(t + " " + c)
-                    out.setdefault(_classify(t), []).append([t[:40], c[:60] or t[:60]])
-                _trim(out)
-                return out, False, raw
-        # 默认：新浪财经滚动（真实、稳定、UTF-8）
         txt = get("https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2516&num=30&r=0.1")
         obj = json.loads(txt)
         items = (obj.get("result") or {}).get("data") or []
         for it in items:
             t = it.get("title", "")
-            if not t:
-                continue
+            if not t: continue
             c = it.get("intro") or it.get("summary") or it.get("wapsummary") or ""
             raw.append(t + " " + c)
-            out.setdefault(_classify(t), []).append([t[:40], (c or t)[:60]])
-        _trim(out)
+            b = _bucket(t)
+            out[b].append([t[:42], (c or t)[:60]])
+        for k in out: out[k] = out[k][:10]
         if any(out.values()):
             return out, False, raw
         raise ValueError("empty")
     except Exception as e:
         print("news fail:", e, file=sys.stderr)
-        return {
-            "全球宏观":[["美联储","维持利率不变，点阵图暗示年内或降息1次","_demo"]],
-            "央行动态":[["人民银行","开展逆回购呵护流动性，LPR持平","_demo"]],
-            "国内财经":[["财政","专项债发行提速，基建链资金面改善","_demo"]],
-        }, True, []
+        return {"hot":[["国常会","研究部署稳增长一揽子增量政策","_demo"]],
+                "macro":[["美联储","维持利率不变，点阵图暗示年内或降息1次","_demo"]],
+                "livelihood":[["多地","推出促消费举措，家电以旧换新扩围","_demo"]],
+                "finance":[["证监会","强调保护中小投资者，严打违规","_demo"]]}, True, []
 
-def _trim(out, n=8):
-    for k in out:
-        out[k] = out[k][:n]
-
-# ---------- 4. 英语「每日背三句」----------
-def fetch_english():
-    feed = os.environ.get("ENGLISH_RSS")
-    if feed:
-        try:
-            xml = get(feed)
-            items = re.findall(r"<item[\s\S]*?</item>", xml, re.I)
-            arr = []
-            for it in items[:3]:
-                t = re.search(r"<title>([\s\S]*?)</title>", it, re.I)
-                l = re.search(r"<link>([\s\S]*?)</link>", it, re.I)
-                d = re.search(r"<description>([\s\S]*?)</description>", it, re.I)
-                title = strip_tags(t.group(1) if t else "")
-                link = (l.group(1) if l else feed).strip()
-                desc = strip_tags(d.group(1) if d else "")[:80]
-                arr.append({"en": title or "(无标题)", "cn": desc or title, "link": link})
-            if arr:
-                return arr, False
-        except Exception as e:
-            print("english rss fail:", e, file=sys.stderr)
-    return [
-        {"en":"I really appreciate you taking the time to help me with this.",
-         "cn":"非常感谢你抽时间帮我这件事。",
-         "link":"https://weixin.qq.com/"},
-        {"en":"Let's touch base sometime next week to align on the plan.",
-         "cn":"我们下周找个时间对齐下方案。",
-         "link":"https://weixin.qq.com/"},
-        {"en":"Could you walk me through how this process works?",
-         "cn":"你能带我过一遍这个流程是怎么运作的吗？",
-         "link":"https://weixin.qq.com/"},
-    ], True
-
-# ---------- 5. 每日天气（Open-Meteo，免密钥）----------
-WMO = {
- 0:"晴",1:"大致晴朗",2:"局部多云",3:"阴",45:"雾",48:"雾凇",
+# ---------- 4. 每日天气（Open-Meteo，免密钥）----------
+WMO = {0:"晴",1:"大致晴朗",2:"局部多云",3:"阴",45:"雾",48:"雾凇",
  51:"毛毛雨",53:"小雨",55:"中雨",56:"冻雨",57:"冻雨",61:"小雨",63:"中雨",65:"大雨",
  66:"冻雨",67:"冻雨",71:"小雪",73:"中雪",75:"大雪",77:"雪粒",80:"阵雨",81:"阵雨",82:"强阵雨",
- 85:"阵雪",86:"强阵雪",95:"雷阵雨",96:"雷阵雨伴冰雹",99:"强雷暴冰雹"
-}
+ 85:"阵雪",86:"强阵雪",95:"雷阵雨",96:"雷阵雨伴冰雹",99:"强雷暴冰雹"}
 def wmo_text(c):
     try: return WMO.get(int(float(c)), "未知")
     except: return "未知"
 
 def fetch_weather():
-    city = (os.environ.get("WEATHER_CITY") or "北京").strip()
+    city = (os.environ.get("WEATHER_CITY") or "深圳").strip()
     try:
         g = get("https://geocoding-api.open-meteo.com/v1/search?name=%s&count=1&language=zh" % urllib.parse.quote(city))
         res = json.loads(g).get("results") or [{}]
@@ -223,36 +153,21 @@ def main():
     indices, di = fetch_indices()
     news, dn, raw = fetch_news()
     boards, db = fetch_boards(raw)
-    english, de = fetch_english()
     weather, dw = fetch_weather()
     trade = is_trade_day()
-    review = None
-    if trade:
-        review = {
-            "isTrade": True,
-            "indices": indices,
-            "boards": boards,
-            "potential": [
-                {"name":"人工智能（软硬件）","opp":"产业趋势确定","risk":"估值波动大、业绩兑现节奏"},
-                {"name":"红利/高股息","opp":"低利率环境稀缺收益","risk":"风格切换时弹性不足"},
-            ],
-        }
-    else:
-        review = {"isTrade": False}
     data = {
         "generatedAt": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
         "date": today_str(),
         "indices": indices, "_demo_indices": di,
         "news": news, "_demo_news": dn,
-        "english": english, "_demo_english": de,
-        "review": review,
-        "_demo_boards": db,
+        "boards": boards, "_demo_boards": db,
         "weather": weather, "_demo_weather": dw,
+        "review": {"isTrade": trade},
     }
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    print("data.json 已生成 | 指数demo=%s 板块demo=%s 新闻demo=%s 英语demo=%s 天气demo=%s 交易日=%s"
-          % (di, db, dn, de, dw, trade))
+    print("data.json 已生成 | 指数demo=%s 新闻demo=%s 板块demo=%s 天气demo=%s 交易日=%s"
+          % (di, dn, db, dw, trade))
 
 if __name__ == "__main__":
     main()
