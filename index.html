@@ -626,7 +626,7 @@ function p_schedule(){
       <h3>📅 今天 <span class="tag">${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} 周${wk}</span></h3>
       <textarea id="plan_today" class="textarea" rows="3" placeholder="今日计划（次日自动清空）">${esc(tPlan)}</textarea>
       <div class="row" style="margin-top:8px"><button class="btn sm" onclick="savePlan('today')">保存</button>
-        <span class="pill green">今日打卡 ${completions}/12</span></div>
+        <span class="pill green">今日打卡 ${completions}/${MODULES.length}</span></div>
     </div>
     <div class="card">
       <h3>🗓️ 本周计划 <span class="tag">第 ${weekOfYear(d)} 周</span></h3>
