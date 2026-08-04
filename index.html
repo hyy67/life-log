@@ -215,6 +215,9 @@
   .news-row .meta{font-size:12px;color:var(--muted);margin-top:4px;}
   .news-row .meta span{margin-right:10px;}
   .news-row .arrow{flex:0 0 auto;color:var(--muted);font-size:14px;margin-top:4px;}
+  .news-row .desc{display:none;font-size:12.5px;color:var(--ink);line-height:1.6;margin-top:8px;padding:8px;background:var(--card-2);border-radius:8px;}
+  .news-row.open .desc{display:block;}
+  .news-row.open .arrow{transform:rotate(90deg);}
 </style>
 </head>
 <body>
@@ -413,28 +416,28 @@ const AI_AUDIO = [
   {t:"十分钟搞懂大模型", text:"大模型本质是在预测下一个词，区别在参数规模、训练数据和对齐方式。理解这点，选型时就不会被营销话术带偏。"},
 ];
 const TECH_NEWS = [
-  {t:"国产大模型推理能力再突破，多模态落地加速", src:"科技日报", time:"2小时前"},
-  {t:"特斯拉Optimus人形机器人量产进度曝光", src:"36氪", time:"3小时前"},
-  {t:"苹果AI中文支持即将上线，Siri迎来最大升级", src:"极客公园", time:"4小时前"},
-  {t:"华为新旗舰搭载麒麟芯片回归海外市场", src:"新浪财经", time:"5小时前"},
-  {t:"OpenAI与出版商达成内容授权协议", src:"Bloomberg", time:"6小时前"},
-  {t:"国内算力中心建设提速，智算规模翻倍", src:"财联社", time:"7小时前"},
-  {t:"新能源汽车固态电池量产倒计时", src:"汽车之家", time:"8小时前"},
-  {t:"AI编程助手开启Agent时代，自动改Bug成标配", src:"InfoQ", time:"9小时前"},
-  {t:"英伟达新一代AI芯片产能受追捧", src:"华尔街见闻", time:"10小时前"},
-  {t:"智能家居生态互联互通标准落地", src:"智东西", time:"11小时前"},
+  {t:"国产大模型推理能力再突破，多模态落地加速", src:"科技日报", time:"2小时前", desc:"国产大模型在多项推理 benchmark 刷新纪录，多模态能力加速落地行业应用。"},
+  {t:"特斯拉Optimus人形机器人量产进度曝光", src:"36氪", time:"3小时前", desc:"Optimus 量产时间表与产能规划流出，人形机器人商业化进入倒计时。"},
+  {t:"苹果AI中文支持即将上线，Siri迎来最大升级", src:"极客公园", time:"4小时前", desc:"苹果国行设备 AI 功能有望近期开放，Siri 交互体验大幅增强。"},
+  {t:"华为新旗舰搭载麒麟芯片回归海外市场", src:"新浪财经", time:"5小时前", desc:"华为旗舰在海外重新上架，麒麟芯片产能恢复带动出货回升。"},
+  {t:"OpenAI与出版商达成内容授权协议", src:"Bloomberg", time:"6小时前", desc:"OpenAI 与多家出版机构签约，缓解训练数据版权争议。"},
+  {t:"国内算力中心建设提速，智算规模翻倍", src:"财联社", time:"7小时前", desc:"多地智算中心集中投产，国产算力总规模较去年接近翻番。"},
+  {t:"新能源汽车固态电池量产倒计时", src:"汽车之家", time:"8小时前", desc:"多家车企锁定固态电池量产节点，续航与安全性有望跃升。"},
+  {t:"AI编程助手开启Agent时代，自动改Bug成标配", src:"InfoQ", time:"9小时前", desc:"AI 编程工具从补全走向自主 Agent，自动定位并修复缺陷成为新卖点。"},
+  {t:"英伟达新一代AI芯片产能受追捧", src:"华尔街见闻", time:"10小时前", desc:"新一代训练芯片供不应求，云厂商与大模型公司抢先锁单。"},
+  {t:"智能家居生态互联互通标准落地", src:"智东西", time:"11小时前", desc:"跨品牌互联标准发布，智能家居“孤岛”有望逐步打通。"},
 ];
 const WORLD_NEWS = [
-  {t:"美联储会议纪要释放降息信号，全球资产价格波动", src:"华尔街日报", time:"1小时前"},
-  {t:"欧盟通过碳边境税方案，出口企业需关注", src:"金融时报", time:"2小时前"},
-  {t:"中东局势缓和预期推动国际油价回落", src:"Reuters", time:"3小时前"},
-  {t:"日本央行行长暗示年内继续加息", src:"Nikkei", time:"4小时前"},
-  {t:"美国6月职位空缺数回落，劳动力市场降温", src:"美国劳工部", time:"5小时前"},
-  {t:"德国制造业PMI低于预期，欧洲复苏承压", src:"财联社", time:"6小时前"},
-  {t:"东南亚供应链转移持续，越南印尼成热门选址", src:"南华早报", time:"7小时前"},
-  {t:"全球黄金ETF连续三周净流入", src:"World Gold Council", time:"8小时前"},
-  {t:"印度股市创新高，外资持续流入", src:"彭博", time:"9小时前"},
-  {t:"巴西央行加息抑制通胀，新兴市场承压", src:"路透社", time:"10小时前"},
+  {t:"美联储会议纪要释放降息信号，全球资产价格波动", src:"华尔街日报", time:"1小时前", desc:"纪要显示委员讨论降息路径，股债汇与大宗商品集体波动。"},
+  {t:"欧盟通过碳边境税方案，出口企业需关注", src:"金融时报", time:"2小时前", desc:"CBAM 进入实质执行阶段，高耗能出口产品成本或上升。"},
+  {t:"中东局势缓和预期推动国际油价回落", src:"Reuters", time:"3小时前", desc:"地缘风险溢价下降，国际油价回落至阶段低位。"},
+  {t:"日本央行行长暗示年内继续加息", src:"Nikkei", time:"4小时前", desc:"日本货币政策正常化延续，日元汇率与利差交易受关注。"},
+  {t:"美国6月职位空缺数回落，劳动力市场降温", src:"美国劳工部", time:"5小时前", desc:"JOLTS 数据走弱，美国就业市场边际放缓信号增强。"},
+  {t:"德国制造业PMI低于预期，欧洲复苏承压", src:"财联社", time:"6小时前", desc:"德国工业景气疲弱，欧元区复苏动能不足。"},
+  {t:"东南亚供应链转移持续，越南印尼成热门选址", src:"南华早报", time:"7小时前", desc:"关税与成本驱动下，制造产能继续向东南亚转移。"},
+  {t:"全球黄金ETF连续三周净流入", src:"World Gold Council", time:"8小时前", desc:"避险与降息预期共振，黄金 ETF 获持续资金流入。"},
+  {t:"印度股市创新高，外资持续流入", src:"彭博", time:"9小时前", desc:"印度市场估值偏高但资金面强劲，外资延续净买入。"},
+  {t:"巴西央行加息抑制通胀，新兴市场承压", src:"路透社", time:"10小时前", desc:"巴西收紧货币政策应对通胀，其他新兴经济体面临外溢压力。"},
 ];
 const WORK_TIPS = [
   {t:"原材料行业分析", s:"实时行情、产业研报与价格走势", q:"原材料行业分析 行情 研报 价格走势 上海有色网"},
@@ -767,18 +770,14 @@ function buildNewsList(tab){
   if(tab==='world') return [...world, ...hot.filter(x=>hasNewsKw(x.t+x.desc, worldKw))].slice(0,10);
   return hot.slice(0,10);
 }
-function newsLink(it){
-  if(it && it.link) return it.link;
-  return 'https://www.baidu.com/s?wd=' + encodeURIComponent(it.t || '');
-}
-function openNews(el){ const u=el.getAttribute('data-link'); if(u) window.open(u,'_blank'); }
 function newsRow(it,i){
   const rankCls = i===0?'r1':i===1?'r2':i===2?'r3':'rx';
-  return `<div class="news-row" data-link="${esc(newsLink(it))}" onclick="openNews(this)">
+  return `<div class="news-row" onclick="this.classList.toggle('open')">
     <div class="rank ${rankCls}">${i+1}</div>
     <div class="body">
       <div class="t">${esc(it.t)}</div>
       <div class="meta"><span>${esc(it.src)}</span><span>${esc(it.time)}</span></div>
+      ${it.desc?`<div class="desc">${esc(it.desc)}<div style="margin-top:6px"><span class="linkbtn" onclick="event.stopPropagation();window.open('https://www.baidu.com/s?wd=${encodeURIComponent(it.t)}','_blank')">🔍 搜索相关报道</span></div></div>`:''}
     </div>
     <div class="arrow">›</div>
   </div>`;
