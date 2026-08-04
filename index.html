@@ -215,9 +215,6 @@
   .news-row .meta{font-size:12px;color:var(--muted);margin-top:4px;}
   .news-row .meta span{margin-right:10px;}
   .news-row .arrow{flex:0 0 auto;color:var(--muted);font-size:14px;margin-top:4px;}
-  .news-row .desc{display:none;font-size:12.5px;color:var(--ink);line-height:1.6;margin-top:8px;padding:8px;background:var(--card-2);border-radius:8px;}
-  .news-row.open .desc{display:block;}
-  .news-row.open .arrow{transform:rotate(90deg);}
 </style>
 </head>
 <body>
@@ -770,14 +767,18 @@ function buildNewsList(tab){
   if(tab==='world') return [...world, ...hot.filter(x=>hasNewsKw(x.t+x.desc, worldKw))].slice(0,10);
   return hot.slice(0,10);
 }
+function newsLink(it){
+  if(it && it.link) return it.link;
+  return 'https://www.baidu.com/s?wd=' + encodeURIComponent(it.t || '');
+}
+function openNews(el){ const u=el.getAttribute('data-link'); if(u) window.open(u,'_blank'); }
 function newsRow(it,i){
   const rankCls = i===0?'r1':i===1?'r2':i===2?'r3':'rx';
-  return `<div class="news-row" onclick="this.classList.toggle('open')">
+  return `<div class="news-row" data-link="${esc(newsLink(it))}" onclick="openNews(this)">
     <div class="rank ${rankCls}">${i+1}</div>
     <div class="body">
       <div class="t">${esc(it.t)}</div>
       <div class="meta"><span>${esc(it.src)}</span><span>${esc(it.time)}</span></div>
-      ${it.desc?`<div class="desc">${esc(it.desc)}<div style="margin-top:6px"><span class="linkbtn" onclick="event.stopPropagation();window.open('https://www.baidu.com/s?wd=${encodeURIComponent(it.t)}','_blank')">🔍 搜索相关报道</span></div></div>`:''}
     </div>
     <div class="arrow">›</div>
   </div>`;
