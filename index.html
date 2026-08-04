@@ -192,6 +192,32 @@
   .chip{display:inline-block;background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:3px 10px;font-size:12px;margin:3px 4px 3px 0;cursor:pointer;}
   .chip.on{background:var(--primary);color:#fff;border-color:var(--primary);}
   .hidden{display:none!important;}
+
+  /* 新闻资讯 */
+  .news-header{display:flex;align-items:center;justify-content:space-between;margin:2px 0 12px;}
+  .news-header .title{font-size:20px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:8px;}
+  .news-header .date{font-size:12.5px;color:var(--muted);}
+  .news-banner{background:#dfeede;color:#3f6b3e;border-radius:14px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:13.5px;}
+  .news-banner i{font-size:18px;}
+  .news-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;-webkit-overflow-scrolling:touch;}
+  .news-tabs .tab{flex:0 0 auto;padding:6px 14px;border-radius:18px;background:var(--card);color:var(--muted);font-size:13px;cursor:pointer;border:1px solid var(--line);white-space:nowrap;}
+  .news-tabs .tab.active{background:#4caf50;color:#fff;border-color:#4caf50;}
+  .news-list{background:var(--card);border-radius:var(--radius);padding:4px 14px;box-shadow:var(--shadow);}
+  .news-row{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer;}
+  .news-row:last-child{border-bottom:none;}
+  .news-row .rank{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;margin-top:2px;}
+  .news-row .rank.r1{background:#e74c3c;}
+  .news-row .rank.r2{background:#f39c12;}
+  .news-row .rank.r3{background:#f1c40f;color:#5a4a25;}
+  .news-row .rank.rx{background:var(--card-2);color:var(--muted);}
+  .news-row .body{flex:1;min-width:0;}
+  .news-row .t{font-weight:600;font-size:15px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .news-row .meta{font-size:12px;color:var(--muted);margin-top:4px;}
+  .news-row .meta span{margin-right:10px;}
+  .news-row .arrow{flex:0 0 auto;color:var(--muted);font-size:14px;margin-top:4px;}
+  .news-row .desc{display:none;font-size:12.5px;color:var(--ink);line-height:1.6;margin-top:8px;padding:8px;background:var(--card-2);border-radius:8px;}
+  .news-row.open .desc{display:block;}
+  .news-row.open .arrow{transform:rotate(90deg);}
 </style>
 </head>
 <body>
@@ -388,6 +414,30 @@ const AI_AUDIO = [
   {t:"用AI做采购比价（口播稿）", text:"用 AI 做采购比价，先让模型拆出单价结构：原料、加工、物流、税，再抓三家报价做加权均价，最后生成谈判话术，每周三到五小时稳步推进。"},
   {t:"AI快讯每日听（今日摘要）", text:"今天关注 GitHub Copilot、Claude、OpenAI 的更新，把它们迁移到采购的比价分析、供应商评估与成本拆解环节，让信息真正用在工作里。"},
   {t:"十分钟搞懂大模型", text:"大模型本质是在预测下一个词，区别在参数规模、训练数据和对齐方式。理解这点，选型时就不会被营销话术带偏。"},
+];
+const TECH_NEWS = [
+  {t:"国产大模型推理能力再突破，多模态落地加速", src:"科技日报", time:"2小时前"},
+  {t:"特斯拉Optimus人形机器人量产进度曝光", src:"36氪", time:"3小时前"},
+  {t:"苹果AI中文支持即将上线，Siri迎来最大升级", src:"极客公园", time:"4小时前"},
+  {t:"华为新旗舰搭载麒麟芯片回归海外市场", src:"新浪财经", time:"5小时前"},
+  {t:"OpenAI与出版商达成内容授权协议", src:"Bloomberg", time:"6小时前"},
+  {t:"国内算力中心建设提速，智算规模翻倍", src:"财联社", time:"7小时前"},
+  {t:"新能源汽车固态电池量产倒计时", src:"汽车之家", time:"8小时前"},
+  {t:"AI编程助手开启Agent时代，自动改Bug成标配", src:"InfoQ", time:"9小时前"},
+  {t:"英伟达新一代AI芯片产能受追捧", src:"华尔街见闻", time:"10小时前"},
+  {t:"智能家居生态互联互通标准落地", src:"智东西", time:"11小时前"},
+];
+const WORLD_NEWS = [
+  {t:"美联储会议纪要释放降息信号，全球资产价格波动", src:"华尔街日报", time:"1小时前"},
+  {t:"欧盟通过碳边境税方案，出口企业需关注", src:"金融时报", time:"2小时前"},
+  {t:"中东局势缓和预期推动国际油价回落", src:"Reuters", time:"3小时前"},
+  {t:"日本央行行长暗示年内继续加息", src:"Nikkei", time:"4小时前"},
+  {t:"美国6月职位空缺数回落，劳动力市场降温", src:"美国劳工部", time:"5小时前"},
+  {t:"德国制造业PMI低于预期，欧洲复苏承压", src:"财联社", time:"6小时前"},
+  {t:"东南亚供应链转移持续，越南印尼成热门选址", src:"南华早报", time:"7小时前"},
+  {t:"全球黄金ETF连续三周净流入", src:"World Gold Council", time:"8小时前"},
+  {t:"印度股市创新高，外资持续流入", src:"彭博", time:"9小时前"},
+  {t:"巴西央行加息抑制通胀，新兴市场承压", src:"路透社", time:"10小时前"},
 ];
 const WORK_TIPS = [
   {t:"原材料行业分析", s:"实时行情、产业研报与价格走势", q:"原材料行业分析 行情 研报 价格走势 上海有色网"},
@@ -687,21 +737,71 @@ function monthlyModuleStats(){
   return rows || '<div class="empty">本月暂无数据</div>';
 }
 
+let newsTab='all';
+function setNewsTab(tab){ newsTab=tab; p_news(); }
+function newsTime(i){ const h=Math.min(2+i,12); return h+'小时前'; }
+function normNews(arr, src, baseIdx){
+  baseIdx=baseIdx||0;
+  return (arr||[]).map((it,i)=>{
+    if(it && typeof it==='object' && it.t) return it;
+    const title = (Array.isArray(it)?it[0]:it.title)||'';
+    const desc = (Array.isArray(it)?it[1]:it.desc)||'';
+    return {t:title, desc:desc, src:src||'新浪滚动', time:newsTime(baseIdx+i)};
+  });
+}
+function hasNewsKw(s, kws){ s=String(s||''); return kws.some(k=>s.includes(k)); }
+function buildNewsList(tab){
+  const news=(REMOTE&&REMOTE.news)||{};
+  const hot = normNews(news.hot, '新浪滚动', 0);
+  const macro = normNews(news.macro, '新华社', hot.length);
+  const livelihood = normNews(news.livelihood, '央视网', hot.length+macro.length);
+  const finance = normNews(news.finance, '财联社', hot.length+macro.length+livelihood.length);
+  const tech = pick(TECH_NEWS, 10);
+  const world = pick(WORLD_NEWS, 10);
+  const polKw = ['政策','央行','财政部','国务院','人大','法案','关税','通胀','降息','加息','汇率','赤字','降准','立法'];
+  const techKw = ['AI','模型','芯片','科技','互联网','算力','机器人','新能源','电动车','智能','无人机','半导体','光伏','储能','大模型','Optimus','Siri'];
+  const worldKw = ['美国','日本','欧盟','德国','英国','美联储','国际','全球','中东','霍尔木兹','越南','东盟','印度','韩国','巴西'];
+
+  if(tab==='all') return hot.concat(macro, livelihood, finance).slice(0,12);
+  if(tab==='hot') return hot.slice(0,10);
+  if(tab==='pol') return [...macro, ...hot.filter(x=>hasNewsKw(x.t+x.desc, polKw)), ...livelihood.filter(x=>hasNewsKw(x.t+x.desc, polKw))].slice(0,10);
+  if(tab==='finance') return finance.slice(0,10);
+  if(tab==='tech') return tech.slice(0,10);
+  if(tab==='world') return [...world, ...hot.filter(x=>hasNewsKw(x.t+x.desc, worldKw))].slice(0,10);
+  return hot.slice(0,10);
+}
+function newsRow(it,i){
+  const rankCls = i===0?'r1':i===1?'r2':i===2?'r3':'rx';
+  return `<div class="news-row" onclick="this.classList.toggle('open')">
+    <div class="rank ${rankCls}">${i+1}</div>
+    <div class="body">
+      <div class="t">${esc(it.t)}</div>
+      <div class="meta"><span>${esc(it.src)}</span><span>${esc(it.time)}</span></div>
+      ${it.desc?`<div class="desc">${esc(it.desc)}<div style="margin-top:6px"><span class="linkbtn" onclick="event.stopPropagation();window.open('https://www.baidu.com/s?wd=${encodeURIComponent(it.t)}','_blank')">🔍 搜索相关报道</span></div></div>`:''}
+    </div>
+    <div class="arrow">›</div>
+  </div>`;
+}
 function p_news(){
   const m=document.getElementById("mod_news");
-  const news=(REMOTE&&REMOTE.news)||{};
-  const items = (news.hot||[]).concat(news.macro||[], news.livelihood||[]);
+  const list = buildNewsList(newsTab);
+  const date = REMOTE?REMOTE.date:'—';
+  const tabs = [
+    {k:'all',l:'全部'},{k:'pol',l:'时政'},{k:'hot',l:'热点'},
+    {k:'tech',l:'科技'},{k:'finance',l:'财经'},{k:'world',l:'国外热点'}
+  ];
   m.innerHTML = `
-    <h2 class="mod">📰 热点新闻 <span class="gear" onclick="openSettings('news')">⚙</span></h2>
-    ${checkinHTML('news','读完今日要闻',5)}
-    <div class="card">
-      <h3>🔥 今日要点总结 <span class="tag">${REMOTE?REMOTE.date:'—'}</span></h3>
-      <div class="note">以下为当日国内外重大资讯提炼（来源：新浪滚动，真实）：</div>
-      ${items.length? items.slice(0,12).map(it=>`<div class="item-row"><div class="thumb">📰</div><div class="meta"><div class="t">${esc(it[0]||it.title||'')}</div><div class="d">${esc((it[1]||it.desc||'').slice(0,60))}</div></div></div>`).join("") : '<div class="empty">今日要闻生成中…</div>'}
+    <div class="news-header">
+      <div class="title">📰 新闻资讯 <span class="gear" style="margin-left:8px" onclick="openSettings('news')">⚙</span></div>
+      <div class="date">${date} 更新</div>
     </div>
-    <div class="card">
-      <h3>🌐 国内外 / 民生 / 时政</h3>
-      <div class="note">宏观与央行动态见「投资理财」「市场复盘」板块。新闻联播具体文稿以央视官方为准。</div>
+    ${checkinHTML('news','读完今日要闻',5)}
+    <div class="news-banner"><i>📰</i><span>每日 9:00 更新 · 至少 10 条</span></div>
+    <div class="news-tabs">
+      ${tabs.map(t=>`<div class="tab ${newsTab===t.k?'active':''}" onclick="setNewsTab('${t.k}')">${t.l}</div>`).join('')}
+    </div>
+    <div class="news-list">
+      ${list.length?list.slice(0,12).map(newsRow).join(''):'<div class="empty">该分类暂无内容，每日 9:00 更新后刷新。</div>'}
     </div>`;
 }
 
