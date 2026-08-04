@@ -114,6 +114,29 @@ def fetch_news():
                 "livelihood":[["多地","推出促消费举措，家电以旧换新扩围"]],
                 "finance":[["证监会","强调保护中小投资者，严打违规"]]}, True, []
 
+# ---------- 3.5 指定频道（新浪滚动，带原文 url）----------
+def fetch_channel(lid, num=12):
+    out = []
+    try:
+        url = "https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=%d&num=%d&r=0.1" % (lid, num)
+        txt = get(url)
+        obj = json.loads(txt)
+        items = (obj.get("result") or {}).get("data") or []
+        for it in items:
+            t = it.get("title", "")
+            if not t: continue
+            c = it.get("intro") or it.get("summary") or it.get("wapsummary") or ""
+            u = it.get("url") or it.get("wapurl") or ""
+            src = it.get("media_name") or ""
+            ctime = it.get("ctime") or 0
+            out.append([t, (c or t)[:120], u, src, ctime])
+        if out:
+            return out[:10], False
+        raise ValueError("empty")
+    except Exception as e:
+        print("channel %s fail:" % lid, e, file=sys.stderr)
+        return [], True
+
 # ---------- 4. 每日天气（Open-Meteo，免密钥）----------
 WMO = {0:"晴",1:"大致晴朗",2:"局部多云",3:"阴",45:"雾",48:"雾凇",
  51:"毛毛雨",53:"小雨",55:"中雨",56:"冻雨",57:"冻雨",61:"小雨",63:"中雨",65:"大雨",
@@ -155,16 +178,21 @@ def fetch_weather():
 def main():
     indices, di = fetch_indices()
     news, dn, raw = fetch_news()
+    tech, dt = fetch_channel(2515)   # 新浪科技
+    world, dw = fetch_channel(2518)  # 环球市场播报（国际）
+    news["tech"] = tech
+    news["world"] = world
     boards, db = fetch_boards(raw)
-    weather, dw = fetch_weather()
+    weather, dwe = fetch_weather()
     trade = is_trade_day()
     data = {
         "generatedAt": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
         "date": today_str(),
         "indices": indices, "_demo_indices": di,
         "news": news, "_demo_news": dn,
+        "_demo_tech": dt, "_demo_world": dw,
         "boards": boards, "_demo_boards": db,
-        "weather": weather, "_demo_weather": dw,
+        "weather": weather, "_demo_weather": dwe,
         "review": {"isTrade": trade},
     }
     with open("data.json", "w", encoding="utf-8") as f:

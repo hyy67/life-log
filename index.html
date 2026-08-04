@@ -767,10 +767,9 @@ function buildNewsList(tab){
   const macro = normNews(news.macro, '新华社', hot.length);
   const livelihood = normNews(news.livelihood, '央视网', hot.length+macro.length);
   const finance = normNews(news.finance, '财联社', hot.length+macro.length+livelihood.length);
-  const tech = pick(TECH_NEWS, 10);
-  const world = pick(WORLD_NEWS, 10);
+  const tech = (news.tech && news.tech.length) ? normNews(news.tech, '新浪科技', 0) : pick(TECH_NEWS, 10);
+  const world = (news.world && news.world.length) ? normNews(news.world, '环球市场', 0) : pick(WORLD_NEWS, 10);
   const polKw = ['政策','央行','财政部','国务院','人大','法案','关税','通胀','降息','加息','汇率','赤字','降准','立法'];
-  const techKw = ['AI','模型','芯片','科技','互联网','算力','机器人','新能源','电动车','智能','无人机','半导体','光伏','储能','大模型','Optimus','Siri'];
   const worldKw = ['美国','日本','欧盟','德国','英国','美联储','国际','全球','中东','霍尔木兹','越南','东盟','印度','韩国','巴西'];
 
   if(tab==='all') return hot.concat(macro, livelihood, finance).slice(0,12);
@@ -778,7 +777,7 @@ function buildNewsList(tab){
   if(tab==='pol') return [...macro, ...hot.filter(x=>hasNewsKw(x.t+x.desc, polKw)), ...livelihood.filter(x=>hasNewsKw(x.t+x.desc, polKw))].slice(0,10);
   if(tab==='finance') return finance.slice(0,10);
   if(tab==='tech') return tech.slice(0,10);
-  if(tab==='world') return [...world, ...hot.filter(x=>hasNewsKw(x.t+x.desc, worldKw))].slice(0,10);
+  if(tab==='world') return world.slice(0,10);
   return hot.slice(0,10);
 }
 function newsRow(it,i){
