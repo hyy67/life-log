@@ -97,19 +97,22 @@ def fetch_news():
             t = it.get("title", "")
             if not t: continue
             c = it.get("intro") or it.get("summary") or it.get("wapsummary") or ""
+            u = it.get("url") or it.get("wapurl") or ""
+            src = it.get("media_name") or ""
+            ctime = it.get("ctime") or 0
             raw.append(t + " " + c)
             b = _bucket(t)
-            out[b].append([t[:42], (c or t)[:60]])
+            out[b].append([t, (c or t)[:120], u, src, ctime])
         for k in out: out[k] = out[k][:10]
         if any(out.values()):
             return out, False, raw
         raise ValueError("empty")
     except Exception as e:
         print("news fail:", e, file=sys.stderr)
-        return {"hot":[["国常会","研究部署稳增长一揽子增量政策","_demo"]],
-                "macro":[["美联储","维持利率不变，点阵图暗示年内或降息1次","_demo"]],
-                "livelihood":[["多地","推出促消费举措，家电以旧换新扩围","_demo"]],
-                "finance":[["证监会","强调保护中小投资者，严打违规","_demo"]]}, True, []
+        return {"hot":[["国常会","研究部署稳增长一揽子增量政策"]],
+                "macro":[["美联储","维持利率不变，点阵图暗示年内或降息1次"]],
+                "livelihood":[["多地","推出促消费举措，家电以旧换新扩围"]],
+                "finance":[["证监会","强调保护中小投资者，严打违规"]]}, True, []
 
 # ---------- 4. 每日天气（Open-Meteo，免密钥）----------
 WMO = {0:"晴",1:"大致晴朗",2:"局部多云",3:"阴",45:"雾",48:"雾凇",
