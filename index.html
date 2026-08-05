@@ -379,6 +379,7 @@ function q(s){ return document.querySelector(s); }
 function pick(pool, n, off){ off=off||0; const out=[]; const base=dateSeed()+off; for(let i=0;i<n;i++){ out.push(pool[(base+i)%pool.length]); } return out; }
 function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function youdaoUrl(text, isZh){ const q=encodeURIComponent(String(text||'').slice(0,160)); return 'https://dict.youdao.com/dictvoice?audio='+q+'&type='+(isZh?1:2); }
+function baiduTTSUrl(text, isZh){ return 'https://tts.baidu.com/text2audio?tex='+encodeURIComponent(String(text||'').slice(0,160))+'&lan='+(isZh?'zh':'en')+'&cuid=yiyi_app&ctp=1&pdt=1'; }
 const GLOBAL_AUDIO = {
   el:null, src:'', title:'', timer:null,
   init(){
@@ -451,12 +452,17 @@ function audioTogglePlay(){ GLOBAL_AUDIO.toggle(); }
 function audioSeek(v){ GLOBAL_AUDIO.seek(v); }
 function audioPlayTTS(){
   const t=document.getElementById('gap_tts').value.trim(); if(!t){ toast('请输入文本'); return; }
-  const isZh=/[一-鿿]/.test(t); const src=youdaoUrl(t,isZh);
+  const isZh=/[一-鿿]/.test(t);
+  const title='TTS：'+t.slice(0,24);
+  const doBaidu=()=>{
+    toast('正在切换备用语音…');
+    GLOBAL_AUDIO.play(baiduTTSUrl(t,isZh),title, ()=>{
+      toast('备用语音也失败了，切换浏览器语音');
+      synthFallback(t,isZh?'zh-CN':'en-US');
+    });
+  };
   toast('正在加载音频…');
-  GLOBAL_AUDIO.play(src,'TTS：'+t.slice(0,24), ()=>{
-    toast('在线语音加载失败，切换浏览器语音播放');
-    synthFallback(t,isZh?'zh-CN':'en-US');
-  });
+  GLOBAL_AUDIO.play(youdaoUrl(t,isZh),title, doBaidu);
 }
 function audioPlayTTSSelection(){
   const sel=window.getSelection?String(window.getSelection()).trim():'';
@@ -479,9 +485,24 @@ function playTTS(text, lang){
   audioPlayTTS();
 }
 function synthFallback(text, lang){
-  if(!('speechSynthesis' in window)){ toast('音频加载失败，请检查网络'); return; }
-  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang=lang||'en-US'; u.rate=.95; speechSynthesis.speak(u); }
-  catch(e){ toast('音频播放失败'); }
+  if(!('speechSynthesis' in window)){ toast('浏览器不支持语音播放'); return; }
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=lang||'zh-CN'; u.rate=.95; u.pitch=1;
+    let spoken=false;
+    const speak=()=>{
+      if(spoken) return; spoken=true;
+      const vs=speechSynthesis.getVoices()||[];
+      const wanted=lang||'zh-CN';
+      const v=vs.find(x=>x.lang.indexOf(wanted)===0) || vs.find(x=>x.lang.indexOf('zh')===0) || vs.find(x=>x.lang.indexOf('en')===0) || vs[0];
+      if(v) u.voice=v;
+      speechSynthesis.speak(u);
+      toast('正在用浏览器语音播放');
+    };
+    if(speechSynthesis.getVoices().length) speak();
+    else { speechSynthesis.onvoiceschanged=speak; setTimeout(speak,1200); }
+  }catch(e){ toast('语音播放失败：'+e.message); }
 }
 
 /* ============================================================
