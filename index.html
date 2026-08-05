@@ -495,6 +495,24 @@ function playTTS(text, lang){
   const el=document.getElementById('gap_tts'); if(el) el.value=text;
   audioPlayTTS();
 }
+// 音频速览：优先播放本地预生成 MP3(华为/鸿蒙自带浏览器最稳)，失败才退回 TTS
+function playAudioItem(i){
+  const x=AI_AUDIO[i]; if(!x) return;
+  openAudioPlayer();
+  const el=document.getElementById('gap_tts'); if(el) el.value=x.text;
+  const isZh=/[一-鿿]/.test(x.text);
+  if(x.mp3){
+    GLOBAL_AUDIO.setStatus('正在播放预生成语音…');
+    GLOBAL_AUDIO.play(x.mp3, x.t, ()=>{
+      toast('本地音频加载失败，改用浏览器语音');
+      synthFallback(x.text, isZh?'zh-CN':'en-US');
+    }, '正在播放预生成语音…');
+  }else{
+    synthFallback(x.text, isZh?'zh-CN':'en-US');
+    GLOBAL_AUDIO.onPlayStart(()=>{ try{ speechSynthesis.cancel(); }catch(e){} });
+    GLOBAL_AUDIO.play(youdaoUrl(x.text,isZh), x.t, ()=>{ GLOBAL_AUDIO.setStatus('正在用浏览器语音朗读…'); }, '已用浏览器朗读；在线语音可用时将自动切换…');
+  }
+}
 let _synthBusy=false;
 let _lastFallbackTs=0;
 function synthFallback(text, lang){
@@ -647,9 +665,9 @@ const AI_TUBE = {
   }
 };
 const AI_AUDIO = [
-  {t:"用AI做采购比价（口播稿）", text:"用 AI 做采购比价，先让模型拆出单价结构：原料、加工、物流、税，再抓三家报价做加权均价，最后生成谈判话术，每周三到五小时稳步推进。"},
-  {t:"AI快讯每日听（今日摘要）", text:"今天关注 GitHub Copilot、Claude、OpenAI 的更新，把它们迁移到采购的比价分析、供应商评估与成本拆解环节，让信息真正用在工作里。"},
-  {t:"十分钟搞懂大模型", text:"大模型本质是在预测下一个词，区别在参数规模、训练数据和对齐方式。理解这点，选型时就不会被营销话术带偏。"},
+  {t:"用AI做采购比价（口播稿）", text:"用 AI 做采购比价，先让模型拆出单价结构：原料、加工、物流、税，再抓三家报价做加权均价，最后生成谈判话术，每周三到五小时稳步推进。", mp3:"audio/ai_audio_0.mp3"},
+  {t:"AI快讯每日听（今日摘要）", text:"今天关注 GitHub Copilot、Claude、OpenAI 的更新，把它们迁移到采购的比价分析、供应商评估与成本拆解环节，让信息真正用在工作里。", mp3:"audio/ai_audio_1.mp3"},
+  {t:"十分钟搞懂大模型", text:"大模型本质是在预测下一个词，区别在参数规模、训练数据和对齐方式。理解这点，选型时就不会被营销话术带偏。", mp3:"audio/ai_audio_2.mp3"},
 ];
 const TECH_NEWS = [
   {t:"国产大模型推理能力再突破，多模态落地加速", src:"科技日报", time:"2小时前", desc:"国产大模型在多项推理 benchmark 刷新纪录，多模态能力加速落地行业应用。", link:"https://www.stdaily.com"},
@@ -1177,9 +1195,9 @@ function p_ai(){
       </div>
       <div class="card">
         <h3>🎧 音频速览（点开即听）</h3>
-        <div class="note">点「🔊 播放」即听：先在浏览器内朗读(离线最稳)，同时尝试更高音质的在线语音，可用时自动切换。若仍无声，请确认设备媒体音量已开启，或在播放器点「🔊 浏览器朗读」。</div>
-        ${AI_AUDIO.map(x=>`<div class="item-row"><div class="thumb">🎧</div><div class="meta"><div class="t">${esc(x.t)}</div></div>
-          <button class="btn sm ghost" onclick="playTTS('${esc(x.text)}')">🔊 播放</button></div>`).join("")}
+        <div class="note">点「🔊 播放」即听：播放的是已预生成的中文语音（MP3），华为/鸿蒙自带浏览器也能稳定出声。若本地音频不可用，会自动改用浏览器语音。</div>
+        ${AI_AUDIO.map((x,i)=>`<div class="item-row"><div class="thumb">🎧</div><div class="meta"><div class="t">${esc(x.t)}</div></div>
+          <button class="btn sm ghost" onclick="playAudioItem(${i})">🔊 播放</button></div>`).join("")}
       </div>
     </div>`;
 }
