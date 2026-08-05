@@ -381,29 +381,31 @@ function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">
 function youdaoUrl(text, isZh){ const q=encodeURIComponent(String(text||'').slice(0,160)); return 'https://dict.youdao.com/dictvoice?audio='+q+'&type='+(isZh?1:2); }
 function baiduTTSUrl(text, isZh){ return 'https://tts.baidu.com/text2audio?tex='+encodeURIComponent(String(text||'').slice(0,160))+'&lan='+(isZh?'zh':'en')+'&cuid=yiyi_app&ctp=1&pdt=1'; }
 const GLOBAL_AUDIO = {
-  el:null, src:'', title:'', timer:null,
+  el:null, src:'', title:'', _bound:false, _onErr:null,
   init(){
-    if(this.el) return;
-    this.el=new Audio(); this.el.preload='metadata';
-    this.el.setAttribute('playsinline','true'); this.el.setAttribute('x5-playsinline','true');
-    this.el.style.position='absolute'; this.el.style.left='-9999px'; this.el.style.top='-9999px';
-    document.body.appendChild(this.el);
-    this.el.addEventListener('timeupdate',()=>this.updateUI());
-    this.el.addEventListener('loadedmetadata',()=>this.updateUI());
-    this.el.addEventListener('ended',()=>this.updateUI());
-    this.el.addEventListener('play',()=>this.updateUI());
-    this.el.addEventListener('pause',()=>this.updateUI());
-    this.el.addEventListener('error',()=>{ if(this._onErr){ this._onErr(); this._onErr=null; } });
+    const ex=document.getElementById('gap_audio');
+    if(ex && ex!==this.el){ this.el=ex; this._bound=false; }
+    if(!this.el){
+      this.el=new Audio(); this.el.setAttribute('playsinline','true'); this.el.setAttribute('x5-playsinline','true');
+      document.body.appendChild(this.el);
+    }
+    if(!this._bound){
+      this._bound=true;
+      ['timeupdate','loadedmetadata','ended','play','pause'].forEach(ev=>this.el.addEventListener(ev,()=>this.updateUI()));
+      this.el.addEventListener('error',()=>{ if(this._onErr){ const f=this._onErr; this._onErr=null; f(); } });
+    }
   },
-  play(src, title, onErr){
+  setStatus(s){ const el=document.getElementById('gap_status'); if(el) el.textContent=s||''; },
+  play(src, title, onErr, status){
     this.init();
     this._onErr=onErr||null;
     if(src && src!==this.src){ this.el.src=src; this.src=src; this.title=title||''; this.el.load(); }
+    if(status) this.setStatus(status);
     const p=this.el.play();
-    if(p&&p.catch){ p.catch(e=>{ console.log('audio play err',e); if(onErr) onErr(); else toast('播放失败，请检查音频链接或网络'); }); }
+    if(p&&p.catch){ p.catch(e=>{ console.log('audio play err',e); if(onErr) onErr(); else { this.setStatus('播放失败，请检查音频链接或网络'); toast('播放失败'); } }); }
     this.updateUI();
   },
-  toggle(){ if(!this.el||!this.src) return; if(this.el.paused) this.el.play().catch(()=>{}); else this.el.pause(); this.updateUI(); },
+  toggle(){ if(!this.el||!this.src) return; if(this.el.paused){ this.el.play().catch(()=>{}); } else { this.el.pause(); } this.updateUI(); },
   seek(v){ if(this.el&&this.el.duration){ this.el.currentTime=(v/100)*this.el.duration; } },
   updateUI(){
     const t=document.getElementById('gap_title'); if(t) t.textContent=this.title||'未选择音频';
@@ -414,11 +416,13 @@ const GLOBAL_AUDIO = {
   }
 };
 function fmtAudioTime(s){ if(!s||isNaN(s)) return '0:00'; const m=Math.floor(s/60); const sec=Math.floor(s%60); return m+':'+(sec<10?'0':'')+sec; }
-function openAudioPlayer(){ GLOBAL_AUDIO.init(); renderAudioPlayerModal(); }
+function openAudioPlayer(){ renderAudioPlayerModal(); GLOBAL_AUDIO.init(); }
 function renderAudioPlayerModal(){
   const html=`<span class="close" onclick="closeModal()">✕</span>
     <h3>🎧 音频播放器</h3>
     <div class="note" style="margin:6px 0 10px">当前：<b id="gap_title">${esc(GLOBAL_AUDIO.title||'未选择音频')}</b></div>
+    <audio id="gap_audio" controls playsinline style="width:100%;margin:4px 0 2px"></audio>
+    <div id="gap_status" class="note" style="margin-bottom:6px">点击下方按钮加载音频</div>
     <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
       <button class="btn" id="gap_play" onclick="audioTogglePlay()" style="flex:0 0 auto">▶ 播放</button>
       <span id="gap_cur" class="muted" style="font-size:12px;width:34px;text-align:center">0:00</span>
@@ -454,15 +458,11 @@ function audioPlayTTS(){
   const t=document.getElementById('gap_tts').value.trim(); if(!t){ toast('请输入文本'); return; }
   const isZh=/[一-鿿]/.test(t);
   const title='TTS：'+t.slice(0,24);
-  const doBaidu=()=>{
-    toast('正在切换备用语音…');
-    GLOBAL_AUDIO.play(baiduTTSUrl(t,isZh),title, ()=>{
-      toast('备用语音也失败了，切换浏览器语音');
-      synthFallback(t,isZh?'zh-CN':'en-US');
-    });
-  };
   toast('正在加载音频…');
-  GLOBAL_AUDIO.play(youdaoUrl(t,isZh),title, doBaidu);
+  GLOBAL_AUDIO.play(youdaoUrl(t,isZh),title, ()=>{
+    toast('在线语音加载失败，切换浏览器语音');
+    synthFallback(t,isZh?'zh-CN':'en-US');
+  }, '正在加载在线语音…');
 }
 function audioPlayTTSSelection(){
   const sel=window.getSelection?String(window.getSelection()).trim():'';
@@ -472,11 +472,11 @@ function audioPlayTTSSelection(){
 }
 function audioUpload(input){
   const f=input.files[0]; if(!f) return;
-  const url=URL.createObjectURL(f); GLOBAL_AUDIO.play(url,'本地：'+f.name);
+  const url=URL.createObjectURL(f); GLOBAL_AUDIO.play(url,'本地：'+f.name, null, '正在播放本地文件…');
 }
 function audioPlayUrl(){
   const u=document.getElementById('gap_url').value.trim(); if(!u){ toast('请输入音频地址'); return; }
-  GLOBAL_AUDIO.play(u,'网络音频');
+  GLOBAL_AUDIO.play(u,'网络音频', null, '正在播放网络音频…');
 }
 function playTTS(text, lang){
   text=String(text||'').trim(); if(!text){ return; }
@@ -499,6 +499,7 @@ function synthFallback(text, lang){
       if(v) u.voice=v;
       speechSynthesis.speak(u);
       toast('正在用浏览器语音播放');
+      if(window.GLOBAL_AUDIO) GLOBAL_AUDIO.setStatus('正在用浏览器语音朗读…');
     };
     if(speechSynthesis.getVoices().length) speak();
     else { speechSynthesis.onvoiceschanged=speak; setTimeout(speak,1200); }
