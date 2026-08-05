@@ -384,16 +384,22 @@ const GLOBAL_AUDIO = {
   init(){
     if(this.el) return;
     this.el=new Audio(); this.el.preload='metadata';
+    this.el.setAttribute('playsinline','true'); this.el.setAttribute('x5-playsinline','true');
+    this.el.style.position='absolute'; this.el.style.left='-9999px'; this.el.style.top='-9999px';
+    document.body.appendChild(this.el);
     this.el.addEventListener('timeupdate',()=>this.updateUI());
     this.el.addEventListener('loadedmetadata',()=>this.updateUI());
     this.el.addEventListener('ended',()=>this.updateUI());
     this.el.addEventListener('play',()=>this.updateUI());
     this.el.addEventListener('pause',()=>this.updateUI());
+    this.el.addEventListener('error',()=>{ if(this._onErr){ this._onErr(); this._onErr=null; } });
   },
-  play(src, title){
+  play(src, title, onErr){
     this.init();
+    this._onErr=onErr||null;
     if(src && src!==this.src){ this.el.src=src; this.src=src; this.title=title||''; this.el.load(); }
-    this.el.play().catch(e=>{ console.log('audio play err',e); toast('播放失败，请检查音频链接或网络'); });
+    const p=this.el.play();
+    if(p&&p.catch){ p.catch(e=>{ console.log('audio play err',e); if(onErr) onErr(); else toast('播放失败，请检查音频链接或网络'); }); }
     this.updateUI();
   },
   toggle(){ if(!this.el||!this.src) return; if(this.el.paused) this.el.play().catch(()=>{}); else this.el.pause(); this.updateUI(); },
@@ -446,7 +452,11 @@ function audioSeek(v){ GLOBAL_AUDIO.seek(v); }
 function audioPlayTTS(){
   const t=document.getElementById('gap_tts').value.trim(); if(!t){ toast('请输入文本'); return; }
   const isZh=/[一-鿿]/.test(t); const src=youdaoUrl(t,isZh);
-  GLOBAL_AUDIO.play(src,'TTS：'+t.slice(0,24));
+  toast('正在加载音频…');
+  GLOBAL_AUDIO.play(src,'TTS：'+t.slice(0,24), ()=>{
+    toast('在线语音加载失败，切换浏览器语音播放');
+    synthFallback(t,isZh?'zh-CN':'en-US');
+  });
 }
 function audioPlayTTSSelection(){
   const sel=window.getSelection?String(window.getSelection()).trim():'';
@@ -464,10 +474,9 @@ function audioPlayUrl(){
 }
 function playTTS(text, lang){
   text=String(text||'').trim(); if(!text){ return; }
-  const isZh=/[一-鿿]/.test(text); const src=youdaoUrl(text,isZh);
-  GLOBAL_AUDIO.play(src,'TTS：'+text.slice(0,24));
-  GLOBAL_AUDIO.el.onerror=()=>{ synthFallback(text,isZh?'zh-CN':'en-US'); };
   openAudioPlayer();
+  const el=document.getElementById('gap_tts'); if(el) el.value=text;
+  audioPlayTTS();
 }
 function synthFallback(text, lang){
   if(!('speechSynthesis' in window)){ toast('音频加载失败，请检查网络'); return; }
@@ -1118,9 +1127,9 @@ function p_ai(){
       </div>
       <div class="card">
         <h3>🎧 音频速览（点开即听）</h3>
-        <div class="note">点「🔊 朗读」即可听到真实语音（有道 TTS，国内可直连）。</div>
+        <div class="note">点击右侧「🔊 播放」按钮打开音频播放器收听。若在线语音无法加载，会自动切换浏览器语音。</div>
         ${AI_AUDIO.map(x=>`<div class="item-row"><div class="thumb">🎧</div><div class="meta"><div class="t">${esc(x.t)}</div></div>
-          <button class="btn sm ghost" onclick="playTTS('${esc(x.text)}')">🔊 朗读</button></div>`).join("")}
+          <button class="btn sm ghost" onclick="playTTS('${esc(x.text)}')">🔊 播放</button></div>`).join("")}
       </div>
     </div>`;
 }
