@@ -381,7 +381,7 @@ function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">
 function youdaoUrl(text, isZh){ const q=encodeURIComponent(String(text||'').slice(0,160)); return 'https://dict.youdao.com/dictvoice?audio='+q+'&type='+(isZh?1:2); }
 function baiduTTSUrl(text, isZh){ return 'https://tts.baidu.com/text2audio?tex='+encodeURIComponent(String(text||'').slice(0,160))+'&lan='+(isZh?'zh':'en')+'&cuid=yiyi_app&ctp=1&pdt=1'; }
 const GLOBAL_AUDIO = {
-  el:null, src:'', title:'', _bound:false, _onErr:null,
+  el:null, src:'', title:'', _bound:false, _onErr:null, _onPlayStart:null,
   init(){
     const ex=document.getElementById('gap_audio');
     if(ex && ex!==this.el){ this.el=ex; this._bound=false; }
@@ -393,8 +393,10 @@ const GLOBAL_AUDIO = {
       this._bound=true;
       ['timeupdate','loadedmetadata','ended','play','pause'].forEach(ev=>this.el.addEventListener(ev,()=>this.updateUI()));
       this.el.addEventListener('error',()=>{ if(this._onErr){ const f=this._onErr; this._onErr=null; f(); } });
+      this.el.addEventListener('playing',()=>{ if(this._onPlayStart){ const f=this._onPlayStart; this._onPlayStart=null; f(); } });
     }
   },
+  onPlayStart(fn){ this._onPlayStart=fn; },
   setStatus(s){ const el=document.getElementById('gap_status'); if(el) el.textContent=s||''; },
   play(src, title, onErr, status){
     this.init();
@@ -435,6 +437,7 @@ function renderAudioPlayerModal(){
       <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap">
         <button class="btn sm" onclick="audioPlayTTS()">朗读输入文本</button>
         <button class="btn sm ghost" onclick="audioPlayTTSSelection()">朗读选中/页面文本</button>
+        <button class="btn sm ghost" onclick="synthFallbackFromBox()">🔊 浏览器朗读</button>
       </div>
     </div>
     <div class="card" style="margin:10px 0">
@@ -458,17 +461,25 @@ function audioPlayTTS(){
   const t=document.getElementById('gap_tts').value.trim(); if(!t){ toast('请输入文本'); return; }
   const isZh=/[一-鿿]/.test(t);
   const title='TTS：'+t.slice(0,24);
-  toast('正在加载音频…');
-  GLOBAL_AUDIO.play(youdaoUrl(t,isZh),title, ()=>{
-    toast('在线语音加载失败，切换浏览器语音');
-    synthFallback(t,isZh?'zh-CN':'en-US');
-  }, '正在加载在线语音…');
+  // 1) 先在用户手势内启动浏览器语音(离线最稳)，保证点开即听
+  synthFallback(t, isZh?'zh-CN':'en-US');
+  // 2) 并行尝试更高音质的在线语音；一旦真正播放就取消浏览器朗读，避免重叠
+  GLOBAL_AUDIO.onPlayStart(()=>{ try{ speechSynthesis.cancel(); }catch(e){} GLOBAL_AUDIO.setStatus('正在播放在线语音'); });
+  GLOBAL_AUDIO.play(youdaoUrl(t,isZh), title, ()=>{
+    GLOBAL_AUDIO.setStatus('正在用浏览器语音朗读…');
+  }, '已用浏览器朗读；在线语音可用时将自动切换…');
 }
 function audioPlayTTSSelection(){
   const sel=window.getSelection?String(window.getSelection()).trim():'';
   const t=sel || document.title || '壹壹工作台';
   const el=document.getElementById('gap_tts'); if(el) el.value=t;
   audioPlayTTS();
+}
+function synthFallbackFromBox(){
+  const el=document.getElementById('gap_tts'); const t=el?el.value.trim():'';
+  if(!t){ toast('请先在上方输入文本'); return; }
+  const isZh=/[一-鿿]/.test(t);
+  synthFallback(t, isZh?'zh-CN':'en-US');
 }
 function audioUpload(input){
   const f=input.files[0]; if(!f) return;
@@ -484,25 +495,42 @@ function playTTS(text, lang){
   const el=document.getElementById('gap_tts'); if(el) el.value=text;
   audioPlayTTS();
 }
+let _synthBusy=false;
+let _lastFallbackTs=0;
 function synthFallback(text, lang){
-  if(!('speechSynthesis' in window)){ toast('浏览器不支持语音播放'); return; }
+  const now=Date.now();
+  if(now-_lastFallbackTs < 1500){ return; } // 去抖：避免 play() 拒绝与 error 事件重复触发导致打断
+  _lastFallbackTs=now;
+  lang = lang || 'zh-CN';
+  if(!('speechSynthesis' in window)){ toast('浏览器不支持语音合成，请改用播放器上传/链接音频'); GLOBAL_AUDIO.setStatus('浏览器不支持语音合成'); return; }
   try{
-    speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);
-    u.lang=lang||'zh-CN'; u.rate=.95; u.pitch=1;
-    let spoken=false;
-    const speak=()=>{
-      if(spoken) return; spoken=true;
-      const vs=speechSynthesis.getVoices()||[];
-      const wanted=lang||'zh-CN';
-      const v=vs.find(x=>x.lang.indexOf(wanted)===0) || vs.find(x=>x.lang.indexOf('zh')===0) || vs.find(x=>x.lang.indexOf('en')===0) || vs[0];
-      if(v) u.voice=v;
+    // 分句，避免移动端长文本被截断或静音
+    const chunks = String(text||'').split(/(?<=[。！？.!?；;\n])/).map(s=>s.trim()).filter(Boolean);
+    const list = chunks.length ? chunks : [String(text||'')];
+    let idx = 0;
+    const speakOne = (txt) => {
+      const u = new SpeechSynthesisUtterance(txt);
+      u.lang = lang; u.rate = .98; u.pitch = 1; u.volume = 1;
+      const vs = speechSynthesis.getVoices()||[];
+      const v = vs.find(x=>x.lang && x.lang.toLowerCase().indexOf(lang.toLowerCase())===0)
+             || vs.find(x=>x.lang && x.lang.toLowerCase().indexOf('zh')===0)
+             || vs.find(x=>x.lang && x.lang.toLowerCase().indexOf('en')===0)
+             || vs[0];
+      if(v) u.voice = v;
       speechSynthesis.speak(u);
-      toast('正在用浏览器语音播放');
-      if(window.GLOBAL_AUDIO) GLOBAL_AUDIO.setStatus('正在用浏览器语音朗读…');
     };
-    if(speechSynthesis.getVoices().length) speak();
-    else { speechSynthesis.onvoiceschanged=speak; setTimeout(speak,1200); }
+    speechSynthesis.cancel();
+    _synthBusy = true;
+    speakOne(list[idx]); idx++;
+    speechSynthesis.onend = () => { if(idx < list.length){ speakOne(list[idx]); idx++; } else { _synthBusy=false; } };
+    toast('正在用浏览器语音播放（共'+list.length+'段）');
+    GLOBAL_AUDIO.setStatus('正在用浏览器语音朗读（共'+list.length+'段）…');
+    // 若声音列表尚未就绪，加载完成后用正确音色整体重播一次（不打断当前朗读）
+    if(speechSynthesis.getVoices().length===0){
+      speechSynthesis.onvoiceschanged = () => {
+        if(!_synthBusy){ speechSynthesis.cancel(); list.forEach(speakOne); }
+      };
+    }
   }catch(e){ toast('语音播放失败：'+e.message); }
 }
 
@@ -1149,7 +1177,7 @@ function p_ai(){
       </div>
       <div class="card">
         <h3>🎧 音频速览（点开即听）</h3>
-        <div class="note">点击右侧「🔊 播放」按钮打开音频播放器收听。若在线语音无法加载，会自动切换浏览器语音。</div>
+        <div class="note">点「🔊 播放」即听：先在浏览器内朗读(离线最稳)，同时尝试更高音质的在线语音，可用时自动切换。若仍无声，请确认设备媒体音量已开启，或在播放器点「🔊 浏览器朗读」。</div>
         ${AI_AUDIO.map(x=>`<div class="item-row"><div class="thumb">🎧</div><div class="meta"><div class="t">${esc(x.t)}</div></div>
           <button class="btn sm ghost" onclick="playTTS('${esc(x.text)}')">🔊 播放</button></div>`).join("")}
       </div>
