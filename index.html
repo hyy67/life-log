@@ -814,7 +814,7 @@ function p_news(){
       ${tabs.map(t=>`<div class="tab ${newsTab===t.k?'active':''}" onclick="setNewsTab('${t.k}')">${t.l}</div>`).join('')}
     </div>
     <div class="news-list">
-      ${list.length?list.slice(0,12).map(newsRow).join(''):'<div class="empty">该分类暂无内容，每日 9:00 更新后刷新。</div>'}
+      ${list.length?list.map(newsRow).join(''):'<div class="empty">该分类暂无内容，每日 9:00 更新后刷新。</div>'}
     </div>`;
 }
 

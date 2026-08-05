@@ -77,13 +77,17 @@ def fetch_boards(news_raw):
             {"name":"半导体","pct":0,"_demo":True}], True
 
 # ---------- 3. 新闻分类（新浪滚动）----------
-def _bucket(title):
-    if any(k in title for k in ["美联储","央行","降息","加息","货币","汇率","通胀","地缘"]):
+def _bucket(title, c=""):
+    t = (title or "") + " " + (c or "")
+    # 时政 / 宏观政策
+    if any(k in t for k in ["美联储","央行","降息","加息","货币","汇率","通胀","地缘","政策","国务院","国常会","财政部","人大","两会","关税","法案","监管","降准","赤字","立法","政治局","发改委","制裁","磋商","表态","稳增长","一揽子"]):
         return "macro"
-    if any(k in title for k in ["A股","沪","深","财报","GDP","财政","证监会","交易所","IPO","股市","基金"]):
-        return "finance"
-    if any(k in title for k in ["民生","教育","医疗","就业","消费","房价","养老","社保","菜价"]):
+    # 民生
+    if any(k in t for k in ["民生","教育","医疗","就业","消费","房价","楼市","养老","社保","菜价","生育","工资","个税","医保","落户","限行","菜篮子"]):
         return "livelihood"
+    # 财经 / 市场行情
+    if any(k in t for k in ["A股","沪指","深成指","创业板","财报","GDP","财政","证监会","交易所","IPO","股市","基金","期货","收评","评级","目标价","指数","港股","美股","欧股","券商","银行","保险","ETF","上市","营收","净利润","分红","回购","减持","增持","涨停","跌停","盘中","收盘","开盘","上交所","深交所","北证","黄金","原油","比特币","铂","铜","锂","铝","螺纹钢","债","利率","理财","市值","股价"]):
+        return "finance"
     return "hot"
 
 def fetch_news():
@@ -101,7 +105,7 @@ def fetch_news():
             src = it.get("media_name") or ""
             ctime = it.get("ctime") or 0
             raw.append(t + " " + c)
-            b = _bucket(t)
+            b = _bucket(t, c)
             out[b].append([t, (c or t)[:120], u, src, ctime])
         for k in out: out[k] = out[k][:10]
         if any(out.values()):
