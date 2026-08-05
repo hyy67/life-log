@@ -772,7 +772,11 @@ function buildNewsList(tab){
   const polKw = ['政策','央行','财政部','国务院','人大','法案','关税','通胀','降息','加息','汇率','赤字','降准','立法'];
   const worldKw = ['美国','日本','欧盟','德国','英国','美联储','国际','全球','中东','霍尔木兹','越南','东盟','印度','韩国','巴西'];
 
-  if(tab==='all') return hot.concat(macro, livelihood, finance).slice(0,12);
+  if(tab==='all'){
+    const all = hot.concat(macro, livelihood, finance, tech, world);
+    const seen = new Set();
+    return all.filter(x=>{ const k=x.t||''; if(seen.has(k)) return false; seen.add(k); return true; });
+  }
   if(tab==='hot') return hot.slice(0,10);
   if(tab==='pol') return [...macro, ...hot.filter(x=>hasNewsKw(x.t+x.desc, polKw)), ...livelihood.filter(x=>hasNewsKw(x.t+x.desc, polKw))].slice(0,10);
   if(tab==='finance') return finance.slice(0,10);
