@@ -1,0 +1,16 @@
+{
+  "name": "壹壹 · 我的私人工作台",
+  "short_name": "壹壹",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f6f1ea",
+  "theme_color": "#b15a4f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23b15a4f'/%3E%3Ctext x='90' y='124' font-size='104' text-anchor='middle' fill='%23f6f1ea'%3E%F0%9F%8C%BF%3C/text%3E%3C/svg%3E",
+      "sizes": "180x180",
+      "type": "image/svg+xml"
+    }
+  ]
+}

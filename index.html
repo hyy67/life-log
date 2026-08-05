@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="壹壹" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23b15a4f'/%3E%3Ctext x='90' y='124' font-size='104' text-anchor='middle' fill='%23f6f1ea'%3E%F0%9F%8C%BF%3C/text%3E%3C/svg%3E" />
+<link rel="manifest" href="manifest.json" />
 <style>
   /* ====== 100元纸币低饱和配色（沿用，不更改） ====== */
   :root{
@@ -259,6 +260,12 @@
   .ai-tube .info{padding:7px 9px;}
   .ai-tube .info .tt{font-size:12.5px;font-weight:600;line-height:1.35;height:34px;overflow:hidden;}
   .ai-tube .info .ta{font-size:11px;color:var(--muted);margin-top:3px;}
+
+  /* 全局音频播放器 */
+  .audio-fab{position:absolute;bottom:20px;right:16px;width:48px;height:48px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:var(--shadow);z-index:40;cursor:pointer;}
+  .audio-fab:active{transform:scale(.94);}
+  #gap_bar{-webkit-appearance:none;height:6px;border-radius:3px;background:var(--card-2);outline:none;}
+  #gap_bar::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--primary);cursor:pointer;}
 </style>
 </head>
 <body>
@@ -290,6 +297,7 @@
 
   <div id="modal"><div class="panel" id="modal_panel"></div></div>
   <div id="toast"></div>
+  <div class="audio-fab" onclick="openAudioPlayer()" title="音频播放器">🎧</div>
 </div>
 
 <script>
@@ -371,15 +379,95 @@ function q(s){ return document.querySelector(s); }
 function pick(pool, n, off){ off=off||0; const out=[]; const base=dateSeed()+off; for(let i=0;i<n;i++){ out.push(pool[(base+i)%pool.length]); } return out; }
 function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function youdaoUrl(text, isZh){ const q=encodeURIComponent(String(text||'').slice(0,160)); return 'https://dict.youdao.com/dictvoice?audio='+q+'&type='+(isZh?1:2); }
+const GLOBAL_AUDIO = {
+  el:null, src:'', title:'', timer:null,
+  init(){
+    if(this.el) return;
+    this.el=new Audio(); this.el.preload='metadata';
+    this.el.addEventListener('timeupdate',()=>this.updateUI());
+    this.el.addEventListener('loadedmetadata',()=>this.updateUI());
+    this.el.addEventListener('ended',()=>this.updateUI());
+    this.el.addEventListener('play',()=>this.updateUI());
+    this.el.addEventListener('pause',()=>this.updateUI());
+  },
+  play(src, title){
+    this.init();
+    if(src && src!==this.src){ this.el.src=src; this.src=src; this.title=title||''; this.el.load(); }
+    this.el.play().catch(e=>{ console.log('audio play err',e); toast('播放失败，请检查音频链接或网络'); });
+    this.updateUI();
+  },
+  toggle(){ if(!this.el||!this.src) return; if(this.el.paused) this.el.play().catch(()=>{}); else this.el.pause(); this.updateUI(); },
+  seek(v){ if(this.el&&this.el.duration){ this.el.currentTime=(v/100)*this.el.duration; } },
+  updateUI(){
+    const t=document.getElementById('gap_title'); if(t) t.textContent=this.title||'未选择音频';
+    const btn=document.getElementById('gap_play'); if(btn) btn.textContent=(this.el&&!this.el.paused)?'⏸ 暂停':'▶ 播放';
+    const bar=document.getElementById('gap_bar'); if(bar&&this.el&&this.el.duration){ bar.value=(this.el.currentTime/this.el.duration)*100||0; }
+    const cur=document.getElementById('gap_cur'); if(cur) cur.textContent=fmtAudioTime(this.el?this.el.currentTime:0);
+    const dur=document.getElementById('gap_dur'); if(dur) dur.textContent=fmtAudioTime(this.el&&this.el.duration?this.el.duration:0);
+  }
+};
+function fmtAudioTime(s){ if(!s||isNaN(s)) return '0:00'; const m=Math.floor(s/60); const sec=Math.floor(s%60); return m+':'+(sec<10?'0':'')+sec; }
+function openAudioPlayer(){ GLOBAL_AUDIO.init(); renderAudioPlayerModal(); }
+function renderAudioPlayerModal(){
+  const html=`<span class="close" onclick="closeModal()">✕</span>
+    <h3>🎧 音频播放器</h3>
+    <div class="note" style="margin:6px 0 10px">当前：<b id="gap_title">${esc(GLOBAL_AUDIO.title||'未选择音频')}</b></div>
+    <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+      <button class="btn" id="gap_play" onclick="audioTogglePlay()" style="flex:0 0 auto">▶ 播放</button>
+      <span id="gap_cur" class="muted" style="font-size:12px;width:34px;text-align:center">0:00</span>
+      <input type="range" id="gap_bar" min="0" max="100" value="0" oninput="audioSeek(this.value)" style="flex:1;min-width:0">
+      <span id="gap_dur" class="muted" style="font-size:12px;width:34px;text-align:center">0:00</span>
+    </div>
+    <div class="card" style="margin:10px 0">
+      <h4>🔊 TTS 朗读</h4>
+      <textarea id="gap_tts" class="textarea" rows="3" placeholder="输入要朗读的中文或英文…"></textarea>
+      <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap">
+        <button class="btn sm" onclick="audioPlayTTS()">朗读输入文本</button>
+        <button class="btn sm ghost" onclick="audioPlayTTSSelection()">朗读选中/页面文本</button>
+      </div>
+    </div>
+    <div class="card" style="margin:10px 0">
+      <h4>📁 上传 MP3</h4>
+      <input type="file" id="gap_file" accept="audio/*" onchange="audioUpload(this)" style="font-size:13px;width:100%"/>
+    </div>
+    <div class="card" style="margin:10px 0">
+      <h4>🌐 网络音频地址</h4>
+      <input id="gap_url" class="input" placeholder="https://example.com/audio.mp3" style="margin:6px 0"/>
+      <button class="btn sm" onclick="audioPlayUrl()">播放链接</button>
+    </div>
+    <div class="note" style="margin-top:10px;background:var(--card-2);padding:8px;border-radius:10px">
+      📱 iPhone 添加到桌面后，锁屏、划掉后台会导致音频失效，仅前台可用；建议使用 Safari，不要用微信内置浏览器打开。
+    </div>`;
+  openModal(html);
+  GLOBAL_AUDIO.updateUI();
+}
+function audioTogglePlay(){ GLOBAL_AUDIO.toggle(); }
+function audioSeek(v){ GLOBAL_AUDIO.seek(v); }
+function audioPlayTTS(){
+  const t=document.getElementById('gap_tts').value.trim(); if(!t){ toast('请输入文本'); return; }
+  const isZh=/[一-鿿]/.test(t); const src=youdaoUrl(t,isZh);
+  GLOBAL_AUDIO.play(src,'TTS：'+t.slice(0,24));
+}
+function audioPlayTTSSelection(){
+  const sel=window.getSelection?String(window.getSelection()).trim():'';
+  const t=sel || document.title || '壹壹工作台';
+  const el=document.getElementById('gap_tts'); if(el) el.value=t;
+  audioPlayTTS();
+}
+function audioUpload(input){
+  const f=input.files[0]; if(!f) return;
+  const url=URL.createObjectURL(f); GLOBAL_AUDIO.play(url,'本地：'+f.name);
+}
+function audioPlayUrl(){
+  const u=document.getElementById('gap_url').value.trim(); if(!u){ toast('请输入音频地址'); return; }
+  GLOBAL_AUDIO.play(u,'网络音频');
+}
 function playTTS(text, lang){
   text=String(text||'').trim(); if(!text){ return; }
-  const isZh=/[一-鿿]/.test(text);
-  // 主方案：有道 TTS 音频（国内可直连，真实发音），失败再退回浏览器内置语音
-  let a=document.getElementById('tts_audio');
-  if(!a){ a=document.createElement('audio'); a.id='tts_audio'; a.style.display='none'; document.body.appendChild(a); }
-  a.src=youdaoUrl(text, isZh);
-  const p=a.play();
-  if(p&&p.catch){ p.catch(()=>{ synthFallback(text, isZh?'zh-CN':'en-US'); }); }
+  const isZh=/[一-鿿]/.test(text); const src=youdaoUrl(text,isZh);
+  GLOBAL_AUDIO.play(src,'TTS：'+text.slice(0,24));
+  GLOBAL_AUDIO.el.onerror=()=>{ synthFallback(text,isZh?'zh-CN':'en-US'); };
+  openAudioPlayer();
 }
 function synthFallback(text, lang){
   if(!('speechSynthesis' in window)){ toast('音频加载失败，请检查网络'); return; }
@@ -454,39 +542,48 @@ const AI_SOURCES = [
 ];
 // 子模块2：AI学习 · 学习路径（进度装饰性 0%，点击视频跳 B站）
 const AI_LEARN = [
-  {id:"tool", icon:"🛠️", title:"AI工具入门", sub:"从零掌握主流AI工具", url:"https://search.bilibili.com/all?keyword=AI工具入门", courses:[
-    {t:"AI工具入门到精通完整教程", d:"45min", url:"https://search.bilibili.com/all?keyword=AI工具入门到精通"},
-    {t:"ChatGPT使用技巧大全",      d:"30min", url:"https://search.bilibili.com/all?keyword=ChatGPT使用技巧"},
-    {t:"Prompt工程实战指南",       d:"35min", url:"https://search.bilibili.com/all?keyword=Prompt工程实战"},
-  ]},
-  {id:"code", icon:"💻", title:"AI编程基础", sub:"零基础用AI写代码", url:"https://search.bilibili.com/all?keyword=AI编程基础", courses:[
-    {t:"AI编程入门-Copilot使用指南", d:"35min", url:"https://search.bilibili.com/all?keyword=Copilot使用指南"},
-    {t:"用AI快速开发网页应用",       d:"40min", url:"https://search.bilibili.com/all?keyword=AI开发网页应用"},
-    {t:"AI辅助Python自动化",         d:"45min", url:"https://search.bilibili.com/all?keyword=AI辅助Python自动化"},
-  ]},
+  {id:"tool", icon:"🛠️", title:"AI工具入门", sub:"从零掌握主流AI工具",
+    courses:[
+      {t:"AI工具入门到精通完整教程", d:"45min", url:"https://www.bilibili.com/video/BV1my4y1D7u7?p=1"},
+      {t:"ChatGPT使用技巧大全",      d:"30min", url:"https://www.bilibili.com/video/BV1384y1p7gp"},
+      {t:"Prompt工程实战指南",       d:"35min", url:"https://www.bilibili.com/video/BV1As6AYREvu"},
+    ],
+    plan:[
+      "第1天：观看《AI工具入门到精通完整教程》，完成 ChatGPT / Claude 注册与首次对话，尝试用 AI 回答一个工作问题。",
+      "第2天：观看《ChatGPT使用技巧大全》，掌握追问、角色扮演、格式化输出，整理出 3 个你常用的提示词模板。",
+      "第3天：观看《Prompt工程实战指南》，学习 CO-STAR / 结构化提示词，用 Prompt 写一个周报生成器。"
+    ],
+    homework:"作业：用 AI 生成本周工作周报 + 一份会议纪要模板，截图保存到「拍照剪辑」模块；把最常用的 3 个 Prompt 写入「英语学习」或「工作资源」备忘。"
+  },
+  {id:"code", icon:"💻", title:"AI编程基础", sub:"零基础用AI写代码",
+    courses:[
+      {t:"AI编程入门-Cursor/Copilot使用指南", d:"35min", url:"https://www.bilibili.com/video/BV1KX9jB8E9M/"},
+      {t:"用AI快速开发网页应用",       d:"40min", url:"https://www.bilibili.com/video/BV1RDgZ6SEiM/"},
+      {t:"AI辅助Python自动化",         d:"45min", url:"https://www.bilibili.com/cheese/play/ep2430108"},
+    ],
+    plan:[
+      "第1天：观看《AI编程入门-Cursor/Copilot使用指南》，安装 Cursor 或启用 Copilot，完成第一个 AI 代码补全。",
+      "第2天：观看《用AI快速开发网页应用》，跟随视频完成一个待办事项 / 天气小组件，并保存代码截图。",
+      "第3天：观看《AI辅助Python自动化》，用 AI 写一段批量重命名文件或简单数据处理的脚本。"
+    ],
+    homework:"作业：提交一个用 AI 辅助完成的小网页或 Python 脚本，截图/录屏保存到「拍照剪辑」；在「市场复盘」记录一次用 AI 写代码节省的时间。"
+  },
 ];
 // 子模块3：AI视频课堂 · 分类视频网格（点击跳 B站）
-const BZ = (k)=>"https://search.bilibili.com/all?keyword="+encodeURIComponent(k);
 const AI_TUBE = {
-  tabs:["WorkBuddy","AI动漫制作","通用AI知识"],
+  tabs:["WorkBuddy","通用AI知识"],
   data:{
     "WorkBuddy":[
-      {t:"WorkBuddy入门：从0到1上手AI助手", author:"@AI小课堂",   tags:["入门","B站"], grad:"linear-gradient(135deg,#b15a4f,#dca79d)", url:BZ("WorkBuddy AI助手")},
-      {t:"WorkBuddy帮你写方案｜效率提升",    author:"@效率研究所", tags:["效率","B站"], grad:"linear-gradient(135deg,#bd9a52,#ecdcb4)", url:BZ("WorkBuddy 效率")},
-      {t:"用WorkBuddy做每日工作复盘",       author:"@职场进化论", tags:["实战"],       grad:"linear-gradient(135deg,#6f9b6e,#bcd9bb)", url:BZ("WorkBuddy 复盘")},
-      {t:"WorkBuddy自动化你的工作流",       author:"@工具控",     tags:["进阶"],       grad:"linear-gradient(135deg,#8a6db0,#cdbbe6)", url:BZ("WorkBuddy 自动化")},
-    ],
-    "AI动漫制作":[
-      {t:"AI动漫制作全流程入门",            author:"@二次元工坊", tags:["入门","B站"], grad:"linear-gradient(135deg,#3f7fb0,#a9cfe6)", url:BZ("AI动漫制作")},
-      {t:"用AI把照片变成动漫角色",          author:"@画师日记",   tags:["实战"],       grad:"linear-gradient(135deg,#b15a4f,#e0a99d)", url:BZ("AI 照片转动漫")},
-      {t:"AI生成分镜与动态漫",              author:"@动画实验室", tags:["进阶"],       grad:"linear-gradient(135deg,#bd9a52,#e8d6a8)", url:BZ("AI 分镜 动态漫")},
-      {t:"AI配音+口型同步实战",             author:"@声优小屋",   tags:["效率"],       grad:"linear-gradient(135deg,#6f9b6e,#bcd9bb)", url:BZ("AI 配音 口型同步")},
+      {t:"AI助手零基础到上手",              author:"@AI小课堂",   tags:["入门","B站"], grad:"linear-gradient(135deg,#b15a4f,#dca79d)", url:"https://www.bilibili.com/video/BV1my4y1D7u7?p=1"},
+      {t:"ChatGPT全套教程｜效率提升",       author:"@效率研究所", tags:["效率","B站"], grad:"linear-gradient(135deg,#bd9a52,#ecdcb4)", url:"https://www.bilibili.com/video/BV1As6AYREvu"},
+      {t:"ChatGPT保姆级使用技巧",           author:"@职场进化论", tags:["实战"],       grad:"linear-gradient(135deg,#6f9b6e,#bcd9bb)", url:"https://www.bilibili.com/video/BV1384y1p7gp"},
+      {t:"AI Agent智能体入门",              author:"@工具控",     tags:["进阶"],       grad:"linear-gradient(135deg,#8a6db0,#cdbbe6)", url:"https://www.bilibili.com/video/BV1x7326qENh/"},
     ],
     "通用AI知识":[
-      {t:"大模型到底是怎么工作的",          author:"@科普君",     tags:["入门","B站"], grad:"linear-gradient(135deg,#8a6db0,#cdbbe6)", url:BZ("大模型 原理")},
-      {t:"5分钟看懂Transformer",           author:"@算法茶馆",   tags:["硬核"],       grad:"linear-gradient(135deg,#3f7fb0,#a9cfe6)", url:BZ("Transformer 讲解")},
-      {t:"AI Agent到底是什么",              author:"@智能体观察", tags:["前沿"],       grad:"linear-gradient(135deg,#b15a4f,#dca79d)", url:BZ("AI Agent 是什么")},
-      {t:"普通人如何用AI提效",              author:"@效率派",     tags:["实战"],       grad:"linear-gradient(135deg,#bd9a52,#ecdcb4)", url:BZ("AI 提效 普通人")},
+      {t:"大模型到底是怎么工作的",          author:"@科普君",     tags:["入门","B站"], grad:"linear-gradient(135deg,#8a6db0,#cdbbe6)", url:"https://www.bilibili.com/video/BV15rMD6dEGJ/"},
+      {t:"5分钟看懂Transformer",           author:"@算法茶馆",   tags:["硬核"],       grad:"linear-gradient(135deg,#3f7fb0,#a9cfe6)", url:"https://www.bilibili.com/video/BV1XYTKzzEzL/"},
+      {t:"AI Agent到底是什么",              author:"@智能体观察", tags:["前沿"],       grad:"linear-gradient(135deg,#b15a4f,#dca79d)", url:"https://www.bilibili.com/video/BV1x7326qENh/"},
+      {t:"普通人如何用AI提效",              author:"@效率派",     tags:["实战"],       grad:"linear-gradient(135deg,#bd9a52,#ecdcb4)", url:"https://www.bilibili.com/video/BV1As6AYREvu"},
     ],
   }
 };
@@ -828,6 +925,23 @@ function setAiTube(tab){
   m.querySelectorAll('.ai-vtabs .tab').forEach(t=>t.classList.toggle('active', t.textContent===tab));
   m.querySelectorAll('.ai-tube-pane').forEach(p=>p.classList.toggle('hidden', p.getAttribute('data-tab')!==tab));
 }
+function showAiPlan(id){
+  const tr=AI_LEARN.find(x=>x.id===id); if(!tr) return;
+  const days=tr.plan.map((p,i)=>`<div class="tag-line" style="margin:8px 0"><b>Day ${i+1}：</b>${esc(p)}</div>`).join("");
+  const html=`<span class="close" onclick="closeModal()">✕</span>
+    <h3>${tr.icon} ${esc(tr.title)} · 学习计划与作业</h3>
+    <div style="max-height:50vh;overflow-y:auto;padding-right:4px">
+      ${days}
+      <div style="background:var(--primary-bg);border-radius:10px;padding:10px;margin-top:10px">
+        <b>📝 作业：</b>${esc(tr.homework)}
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn" style="flex:1" onclick="window.open('${tr.courses[0].url}','_blank');closeModal()">开始第1课</button>
+      <button class="btn ghost" style="flex:1" onclick="closeModal()">关闭</button>
+    </div>`;
+  openModal(html);
+}
 function newsTime(i){ const h=Math.min(2+i,12); return h+'小时前'; }
 function normNews(arr, src, baseIdx){
   baseIdx=baseIdx||0;
@@ -964,7 +1078,7 @@ function p_ai(){
       <div class="th"><div class="ic">${tr.icon}</div><div><div class="ti">${esc(tr.title)}</div><div class="su">${esc(tr.sub)}</div></div></div>
       <div class="pr"><div class="progress"><i style="width:0%"></i></div><div class="pv">已学习 0%</div></div>
       ${tr.courses.map(c=>`<div class="ai-course"><div class="pl">${esc(c.d)}</div><div class="cm"><div class="ct">${esc(c.t)}</div><div class="cd">B站可观看</div></div><span class="linkbtn" onclick="window.open('${c.url}','_blank')">看视频↗</span></div>`).join("")}
-      <div class="go" style="margin-top:8px"><span class="linkbtn" onclick="window.open('${tr.url}','_blank')">查看学习计划与作业 ↗</span></div>
+      <div class="go" style="margin-top:8px"><span class="linkbtn" onclick="showAiPlan('${tr.id}')">查看学习计划与作业 ↗</span></div>
     </div>`).join("");
 
   const tubeTabs=AI_TUBE.tabs.map(t=>`<div class="tab ${aiTubeTab===t?'active':''}" onclick="setAiTube('${t}')">${esc(t)}</div>`).join("");
@@ -1496,29 +1610,60 @@ function autoSaveAll(){ try{
   if(document.getElementById("plan_month")) savePlan('month');
   if(document.getElementById("body_note")) saveBody();
 }catch(e){} }
-function exportBackup(){
+function gatherBackupPayload(){
   const data={}; let n=0;
   for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.indexOf("yiyi_")===0){ try{ data[k]=JSON.parse(localStorage.getItem(k)); }catch(e){ data[k]=localStorage.getItem(k); } n++; } }
-  const payload={app:"壹壹",version:1,exportedAt:new Date().toISOString(),data};
+  return {app:"壹壹",version:1,exportedAt:new Date().toISOString(),count:n,data};
+}
+function exportBackup(){
+  const payload=gatherBackupPayload();
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="壹壹-数据备份-"+todayStr()+".json"; document.body.appendChild(a); a.click(); a.remove();
-  toast("已导出 "+n+" 项数据备份 ✦");
+  toast("已导出 "+payload.count+" 项数据备份 ✦");
 }
 function importBackup(file){ if(!file) return; const r=new FileReader();
-  r.onload=function(e){ try{ const o=JSON.parse(e.target.result); const src=o.data||o; let n=0;
-    for(const k in src){ if(k.indexOf("yiyi_")===0){ const v=src[k]; localStorage.setItem(k, typeof v==="object"?JSON.stringify(v):String(v)); n++; } }
-    toast("已恢复 "+n+" 项，正在刷新…"); initWelcome(); renderCoins(); renderNav(); renderContent();
+  r.onload=function(e){ try{ const o=JSON.parse(e.target.result); restoreBackupData(o.data||o); toast("已恢复，正在刷新…"); closeModal(); initWelcome(); renderCoins(); renderNav(); renderContent();
   }catch(err){ toast("备份文件解析失败"); } };
   r.readAsText(file);
+}
+function restoreBackupData(src){
+  let n=0;
+  for(const k in src){ if(k.indexOf("yiyi_")===0){ const v=src[k]; localStorage.setItem(k, typeof v==="object"?JSON.stringify(v):String(v)); n++; } }
+  return n;
+}
+function generateSyncCode(){
+  const payload=gatherBackupPayload();
+  try{
+    const code=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    const el=document.getElementById('sync_code_out'); if(el) el.value=code;
+    toast("同步码已生成，请复制后在另一台设备粘贴 ✦");
+  }catch(e){ toast("生成同步码失败"); }
+}
+function importSyncCode(){
+  const code=document.getElementById('sync_code_in').value.trim(); if(!code){ toast('请粘贴同步码'); return; }
+  try{
+    const payload=JSON.parse(decodeURIComponent(escape(atob(code))));
+    if(payload.app!=="壹壹") throw new Error("invalid app");
+    const n=restoreBackupData(payload.data||{});
+    toast("已恢复 "+n+" 项，正在刷新…"); closeModal(); initWelcome(); renderCoins(); renderNav(); renderContent();
+  }catch(e){ toast("同步码解析失败，请检查是否完整粘贴"); }
 }
 function openBackup(){
   const html=`<span class="close" onclick="closeModal()">✕</span>
    <h3>💾 数据备份</h3>
    <div class="note">所有记录保存在本机浏览器（localStorage）。换设备 / 清缓存前建议导出；重装或换手机后可导入恢复。</div>
-   <button class="btn" style="margin-top:10px;width:100%" onclick="exportBackup()">⬇️ 一键导出全部数据备份</button>
-   <div class="row" style="margin-top:10px"><button class="btn ghost" style="flex:1" onclick="document.getElementById('backup_file2').click()">⬆️ 导入恢复备份</button>
-     <input type="file" id="backup_file2" accept=".json" style="display:none" onchange="importBackup(this.files[0]);this.value='';closeModal()"/></div>
-   <div class="note" style="margin-top:10px">🛡️ 退出或切后台时，当日计划与身体记录会自动保存，无需每次手动点保存。</div>`;
+   <button class="btn" style="margin-top:10px;width:100%" onclick="exportBackup()">⬇️ 一键导出全部数据备份（JSON）</button>
+   <div class="row" style="margin-top:10px"><button class="btn ghost" style="flex:1" onclick="document.getElementById('backup_file2').click()">⬆️ 导入 JSON 恢复</button>
+     <input type="file" id="backup_file2" accept=".json" style="display:none" onchange="importBackup(this.files[0]);this.value='';"/></div>
+   <div class="card" style="margin-top:12px">
+     <h4>🔄 跨设备同步码</h4>
+     <div class="note" style="margin-bottom:6px">无需服务器：在一台设备生成同步码，复制后在另一台设备粘贴即可恢复全部数据。</div>
+     <button class="btn sm" style="margin-bottom:6px" onclick="generateSyncCode()">生成同步码</button>
+     <textarea id="sync_code_out" class="textarea" rows="3" placeholder="点击上方按钮生成同步码…" readonly style="font-size:12px"></textarea>
+     <textarea id="sync_code_in" class="textarea" rows="3" placeholder="在另一台设备粘贴同步码到此处…" style="font-size:12px;margin-top:8px"></textarea>
+     <button class="btn sm" style="margin-top:6px" onclick="importSyncCode()">从同步码恢复</button>
+   </div>
+   <div class="note" style="margin-top:10px">🛡️ 纯前端数据默认只存在当前浏览器；重要数据请定期导出备份。退出或切后台时，当日计划与记录会自动保存。</div>`;
   openModal(html);
 }
 
@@ -1539,6 +1684,10 @@ initWelcome();
 renderCoins();
 renderNav();
 loadRemote();
+if('serviceWorker' in navigator){
+  try{ navigator.serviceWorker.register('sw.js').then(()=>console.log('SW registered')).catch(()=>{}); }
+  catch(e){ console.log('SW registration skipped'); }
+}
 </script>
 </body>
 </html>
