@@ -216,6 +216,49 @@
   .news-row .meta span{margin-right:10px;}
   .news-row .summary{font-size:12.5px;color:var(--ink);line-height:1.65;margin-top:8px;padding:9px 10px;background:var(--card-2);border-left:3px solid var(--primary-soft);border-radius:8px;}
   .news-row .summary b{color:var(--primary);}
+
+  /* AI快讯 重构 */
+  .ai-sec{margin-bottom:4px;}
+  .ai-sec-h{font-size:15px;font-weight:700;color:var(--primary);margin:14px 0 8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .ai-sec-sub{font-size:11.5px;color:var(--muted);font-weight:400;}
+
+  .ai-src{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:var(--card);}
+  .ai-src .hd{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .ai-src .hd .ic{width:30px;height:30px;border-radius:9px;background:var(--primary-bg);display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto;}
+  .ai-src .hd .nm{font-weight:700;font-size:14.5px;}
+  .ai-src .hd .tg{margin-left:auto;font-size:11px;color:var(--muted);background:var(--card-2);padding:2px 8px;border-radius:10px;white-space:nowrap;}
+  .ai-src .ds{font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:8px;}
+  .ai-src .kp{margin:0;padding-left:18px;font-size:13px;color:var(--ink);}
+  .ai-src .kp li{margin:3px 0;}
+  .ai-src .go{margin-top:9px;}
+
+  .ai-track{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:var(--card);}
+  .ai-track .th{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+  .ai-track .th .ic{width:30px;height:30px;border-radius:9px;background:var(--gold-soft);display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto;}
+  .ai-track .th .ti{font-weight:700;font-size:14.5px;}
+  .ai-track .th .su{font-size:12px;color:var(--muted);}
+  .ai-track .pr{display:flex;align-items:center;gap:8px;margin:9px 0;}
+  .ai-track .pr .progress{flex:1;}
+  .ai-track .pr .pv{font-size:11.5px;color:var(--muted);white-space:nowrap;}
+  .ai-course{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);}
+  .ai-course:last-of-type{border-bottom:none;}
+  .ai-course .pl{width:46px;height:26px;border-radius:8px;background:var(--primary-bg);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:0 0 auto;}
+  .ai-course .cm{flex:1;min-width:0;}
+  .ai-course .cm .ct{font-size:13.5px;font-weight:600;}
+  .ai-course .cm .cd{font-size:11.5px;color:var(--muted);}
+
+  .ai-vtabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+  .ai-vtabs .tab{flex:0 0 auto;padding:6px 14px;border-radius:18px;background:var(--card);color:var(--muted);font-size:13px;cursor:pointer;border:1px solid var(--line);white-space:nowrap;}
+  .ai-vtabs .tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .ai-tube-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .ai-tube{border-radius:14px;overflow:hidden;cursor:pointer;box-shadow:var(--shadow);background:var(--card);}
+  .ai-tube .ph{height:86px;display:flex;align-items:center;justify-content:center;position:relative;}
+  .ai-tube .ph .play{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;border:2px solid rgba(255,255,255,.75);}
+  .ai-tube .ph .tg{position:absolute;top:6px;left:6px;display:flex;gap:4px;}
+  .ai-tube .ph .tg span{font-size:10px;background:rgba(0,0,0,.32);color:#fff;padding:1px 6px;border-radius:8px;}
+  .ai-tube .info{padding:7px 9px;}
+  .ai-tube .info .tt{font-size:12.5px;font-weight:600;line-height:1.35;height:34px;overflow:hidden;}
+  .ai-tube .info .ta{font-size:11px;color:var(--muted);margin-top:3px;}
 </style>
 </head>
 <body>
@@ -402,12 +445,51 @@ const AI_NEWS = [
   {t:"Cursor 2.0 增强代码库理解", src:"Cursor", link:"https://cursor.com"},
   {t:"本地小模型跑进手机端", src:"开源社区", link:"https://huggingface.co"},
 ];
-const AI_VIDEO = [
-  {t:"每日AI早报·3分钟速览", src:"B站", url:"https://search.bilibili.com/all?keyword=AI%E6%97%A9%E6%8A%A5"},
-  {t:"大模型最新进展解读", src:"B站", url:"https://search.bilibili.com/all?keyword=%E5%A4%A7%E6%A8%A1%E5%9E%8B%E8%A7%A3%E8%AF%BB"},
-  {t:"AI工具实测·效率提升", src:"B站", url:"https://search.bilibili.com/all?keyword=AI%E5%B7%A5%E5%85%B7%E5%AE%9E%E6%B5%8B"},
-  {t:"AI绘画/视频生成教程", src:"B站", url:"https://search.bilibili.com/all?keyword=AI%E7%BB%98%E7%94%BB%E6%95%99%E7%A8%8B"},
+// 子模块1：AI前沿快讯 · 媒体来源卡（入口固定，今日看点由 tech 新闻每天生成）
+const AI_SOURCES = [
+  {name:"机器之心", icon:"🧠", desc:"AI行业日报 · 前沿研究、大模型动态、产业报道", url:"https://www.jiqizhixin.com", tag:"机器之心", bk:"research"},
+  {name:"量子位",   icon:"⚛️", desc:"科技快讯 · AI产品、创业公司与技术解读",        url:"https://www.qbitai.com",    tag:"量子位",   bk:"product"},
+  {name:"新智元",   icon:"🌐", desc:"AI资讯 · 机器人、智能体与通用人工智能",        url:"https://www.zhidx.com",     tag:"新智元",   bk:"robot"},
+  {name:"36氪",     icon:"🔆", desc:"创投与科技 · AI商业化与创业风向",              url:"https://36kr.com",          tag:"36氪",     bk:"biz"},
 ];
+// 子模块2：AI学习 · 学习路径（进度装饰性 0%，点击视频跳 B站）
+const AI_LEARN = [
+  {id:"tool", icon:"🛠️", title:"AI工具入门", sub:"从零掌握主流AI工具", url:"https://search.bilibili.com/all?keyword=AI工具入门", courses:[
+    {t:"AI工具入门到精通完整教程", d:"45min", url:"https://search.bilibili.com/all?keyword=AI工具入门到精通"},
+    {t:"ChatGPT使用技巧大全",      d:"30min", url:"https://search.bilibili.com/all?keyword=ChatGPT使用技巧"},
+    {t:"Prompt工程实战指南",       d:"35min", url:"https://search.bilibili.com/all?keyword=Prompt工程实战"},
+  ]},
+  {id:"code", icon:"💻", title:"AI编程基础", sub:"零基础用AI写代码", url:"https://search.bilibili.com/all?keyword=AI编程基础", courses:[
+    {t:"AI编程入门-Copilot使用指南", d:"35min", url:"https://search.bilibili.com/all?keyword=Copilot使用指南"},
+    {t:"用AI快速开发网页应用",       d:"40min", url:"https://search.bilibili.com/all?keyword=AI开发网页应用"},
+    {t:"AI辅助Python自动化",         d:"45min", url:"https://search.bilibili.com/all?keyword=AI辅助Python自动化"},
+  ]},
+];
+// 子模块3：AI视频课堂 · 分类视频网格（点击跳 B站）
+const BZ = (k)=>"https://search.bilibili.com/all?keyword="+encodeURIComponent(k);
+const AI_TUBE = {
+  tabs:["WorkBuddy","AI动漫制作","通用AI知识"],
+  data:{
+    "WorkBuddy":[
+      {t:"WorkBuddy入门：从0到1上手AI助手", author:"@AI小课堂",   tags:["入门","B站"], grad:"linear-gradient(135deg,#b15a4f,#dca79d)", url:BZ("WorkBuddy AI助手")},
+      {t:"WorkBuddy帮你写方案｜效率提升",    author:"@效率研究所", tags:["效率","B站"], grad:"linear-gradient(135deg,#bd9a52,#ecdcb4)", url:BZ("WorkBuddy 效率")},
+      {t:"用WorkBuddy做每日工作复盘",       author:"@职场进化论", tags:["实战"],       grad:"linear-gradient(135deg,#6f9b6e,#bcd9bb)", url:BZ("WorkBuddy 复盘")},
+      {t:"WorkBuddy自动化你的工作流",       author:"@工具控",     tags:["进阶"],       grad:"linear-gradient(135deg,#8a6db0,#cdbbe6)", url:BZ("WorkBuddy 自动化")},
+    ],
+    "AI动漫制作":[
+      {t:"AI动漫制作全流程入门",            author:"@二次元工坊", tags:["入门","B站"], grad:"linear-gradient(135deg,#3f7fb0,#a9cfe6)", url:BZ("AI动漫制作")},
+      {t:"用AI把照片变成动漫角色",          author:"@画师日记",   tags:["实战"],       grad:"linear-gradient(135deg,#b15a4f,#e0a99d)", url:BZ("AI 照片转动漫")},
+      {t:"AI生成分镜与动态漫",              author:"@动画实验室", tags:["进阶"],       grad:"linear-gradient(135deg,#bd9a52,#e8d6a8)", url:BZ("AI 分镜 动态漫")},
+      {t:"AI配音+口型同步实战",             author:"@声优小屋",   tags:["效率"],       grad:"linear-gradient(135deg,#6f9b6e,#bcd9bb)", url:BZ("AI 配音 口型同步")},
+    ],
+    "通用AI知识":[
+      {t:"大模型到底是怎么工作的",          author:"@科普君",     tags:["入门","B站"], grad:"linear-gradient(135deg,#8a6db0,#cdbbe6)", url:BZ("大模型 原理")},
+      {t:"5分钟看懂Transformer",           author:"@算法茶馆",   tags:["硬核"],       grad:"linear-gradient(135deg,#3f7fb0,#a9cfe6)", url:BZ("Transformer 讲解")},
+      {t:"AI Agent到底是什么",              author:"@智能体观察", tags:["前沿"],       grad:"linear-gradient(135deg,#b15a4f,#dca79d)", url:BZ("AI Agent 是什么")},
+      {t:"普通人如何用AI提效",              author:"@效率派",     tags:["实战"],       grad:"linear-gradient(135deg,#bd9a52,#ecdcb4)", url:BZ("AI 提效 普通人")},
+    ],
+  }
+};
 const AI_AUDIO = [
   {t:"用AI做采购比价（口播稿）", text:"用 AI 做采购比价，先让模型拆出单价结构：原料、加工、物流、税，再抓三家报价做加权均价，最后生成谈判话术，每周三到五小时稳步推进。"},
   {t:"AI快讯每日听（今日摘要）", text:"今天关注 GitHub Copilot、Claude、OpenAI 的更新，把它们迁移到采购的比价分析、供应商评估与成本拆解环节，让信息真正用在工作里。"},
@@ -737,6 +819,15 @@ function monthlyModuleStats(){
 
 let newsTab='all';
 function setNewsTab(tab){ newsTab=tab; p_news(); }
+
+let aiTubeTab='WorkBuddy';
+function setAiTube(tab){
+  aiTubeTab=tab;
+  const m=document.getElementById("mod_ai");
+  if(!m) return;
+  m.querySelectorAll('.ai-vtabs .tab').forEach(t=>t.classList.toggle('active', t.textContent===tab));
+  m.querySelectorAll('.ai-tube-pane').forEach(p=>p.classList.toggle('hidden', p.getAttribute('data-tab')!==tab));
+}
 function newsTime(i){ const h=Math.min(2+i,12); return h+'小时前'; }
 function normNews(arr, src, baseIdx){
   baseIdx=baseIdx||0;
@@ -818,37 +909,105 @@ function p_news(){
     </div>`;
 }
 
+function aiTechItems(){
+  const news=(REMOTE&&REMOTE.news)||{};
+  return (news.tech||[]).map(x=>({t:x[0]||'', c:x[1]||'', u:x[2]||'', s:x[3]||''}));
+}
+const AI_BK_KW = {
+  research:["大模型","论文","研究","模型","GPT","Claude","Gemini","训练","推理","开源","基准","智能","算法"],
+  product:["发布","上线","推出","工具","App","应用","Copilot","Cursor","ChatGPT","产品","更新","版本","实测"],
+  robot:["机器人","智能体","Agent","人形","具身","自动驾驶","无人机"],
+  biz:["融资","创投","商业化","估值","上市","营收","财报","创业","投资","合作","收购"],
+};
+function aiBullets(){
+  const items=aiTechItems();
+  const buckets={research:[],product:[],robot:[],biz:[]};
+  items.forEach(it=>{
+    const txt=it.t+" "+(it.c||"");
+    let placed=false;
+    for(const k of ["research","product","robot","biz"]){
+      if(AI_BK_KW[k].some(w=>txt.indexOf(w)>=0)){ buckets[k].push(it); placed=true; break; }
+    }
+    if(!placed) buckets.biz.push(it);
+  });
+  const all=items;
+  for(const k of ["research","product","robot","biz"]){
+    let i=0;
+    while(buckets[k].length<3 && i<all.length){ if(buckets[k].indexOf(all[i])<0) buckets[k].push(all[i]); i++; }
+  }
+  return buckets;
+}
+function aiSummary(){
+  const items=aiTechItems().slice(0,4);
+  if(items.length){
+    return "今日聚焦："+items.map(x=>x.t).join("；")+"。建议优先了解 <b>"+(items[0].s||"科技媒体")+"</b> 的动态，把 AI 新工具与新进展迁移到工作与学习的实际场景中。";
+  }
+  return "今日 AI 动态生成中，稍后刷新查看。";
+}
+
 function p_ai(){
   const m=document.getElementById("mod_ai");
-  const list=pick(AI_NEWS,5);
+  const bullets=aiBullets();
+  const srcHtml=AI_SOURCES.map(s=>{
+    const bs=(bullets[s.bk]||[]).slice(0,3);
+    const lis=bs.length? bs.map(x=>`<li>${esc(x.t)}</li>`).join("") : `<li class="muted">今日暂无更新</li>`;
+    return `<div class="ai-src">
+      <div class="hd"><div class="ic">${s.icon}</div><div class="nm">${esc(s.name)}</div><div class="tg">${esc(s.tag)}</div></div>
+      <div class="ds">${esc(s.desc)}</div>
+      <ul class="kp">${lis}</ul>
+      <div class="go"><span class="linkbtn" onclick="window.open('${s.url}','_blank')">进入${esc(s.name)} ↗</span></div>
+    </div>`;
+  }).join("");
+
+  const learnHtml=AI_LEARN.map(tr=>`
+    <div class="ai-track">
+      <div class="th"><div class="ic">${tr.icon}</div><div><div class="ti">${esc(tr.title)}</div><div class="su">${esc(tr.sub)}</div></div></div>
+      <div class="pr"><div class="progress"><i style="width:0%"></i></div><div class="pv">已学习 0%</div></div>
+      ${tr.courses.map(c=>`<div class="ai-course"><div class="pl">${esc(c.d)}</div><div class="cm"><div class="ct">${esc(c.t)}</div><div class="cd">B站可观看</div></div><span class="linkbtn" onclick="window.open('${c.url}','_blank')">看视频↗</span></div>`).join("")}
+      <div class="go" style="margin-top:8px"><span class="linkbtn" onclick="window.open('${tr.url}','_blank')">查看学习计划与作业 ↗</span></div>
+    </div>`).join("");
+
+  const tubeTabs=AI_TUBE.tabs.map(t=>`<div class="tab ${aiTubeTab===t?'active':''}" onclick="setAiTube('${t}')">${esc(t)}</div>`).join("");
+  const tubePanes=AI_TUBE.tabs.map(t=>{
+    const arr=AI_TUBE.data[t]||[];
+    const cards=arr.map(v=>`<div class="ai-tube" onclick="window.open('${v.url}','_blank')">
+      <div class="ph" style="background:${v.grad}"><div class="tg">${v.tags.map(x=>`<span>${esc(x)}</span>`).join("")}</div><div class="play">▶</div></div>
+      <div class="info"><div class="tt">${esc(v.t)}</div><div class="ta">${esc(v.author)}</div></div>
+    </div>`).join("");
+    return `<div class="ai-tube-pane ${aiTubeTab===t?'':'hidden'}" data-tab="${esc(t)}">${cards}</div>`;
+  }).join("");
+
   m.innerHTML = `
     <h2 class="mod">🤖 AI快讯 <span class="gear" onclick="openSettings('ai')">⚙</span></h2>
     ${checkinHTML('ai','看完今日AI快讯',5)}
-    <div class="card">
-      <h3>⏰ 学习节奏</h3>
-      <div class="tag-line">建议每日早间看 5 条，利用碎片时间，每周 3~5 小时稳步推进，应用到<b>采购工作</b>。</div>
+
+    <div class="ai-sec">
+      <div class="ai-sec-h">📡 AI前沿快讯 <span class="ai-sec-sub">最新AI软件·行业科技·工具更新 · 每日刷新</span></div>
+      ${srcHtml}
     </div>
-    <div class="card">
-      <h3>🚀 今日 AI / 科技快讯（精选）</h3>
-      <div class="note">点「打开↗」跳转对应第三方平台原文。</div>
-      ${list.map(x=>`<div class="item-row"><div class="thumb">🤖</div><div class="meta"><div class="t">${esc(x.t)}</div><div class="d">${esc(x.src)}</div></div><span class="linkbtn" onclick="window.open('${x.link}','_blank')">打开↗</span></div>`).join("")}
+
+    <div class="ai-sec">
+      <div class="ai-sec-h">🎓 AI学习 <span class="ai-sec-sub">完整学习计划 · 视频教学 · 进度跟踪</span></div>
+      ${learnHtml}
     </div>
-    <div class="card">
-      <h3>🎬 推荐视频（点开直达针对性视频）</h3>
-      <div class="note">以下为按主题定向检索的视频入口，点「看视频↗」跳转对应平台的搜索结果，挑想看的看。</div>
-      ${AI_VIDEO.map(x=>`<div class="item-row"><div class="thumb">🎬</div><div class="meta"><div class="t">${esc(x.t)}</div><div class="d">${esc(x.src)}</div></div><span class="linkbtn" onclick="window.open('${x.url}','_blank')">看视频↗</span></div>`).join("")}
+
+    <div class="ai-sec">
+      <div class="ai-sec-h">🎬 AI视频课堂</div>
+      <div class="ai-vtabs">${tubeTabs}</div>
+      ${tubePanes}
     </div>
-    <div class="card">
-      <h3>🎧 音频速览（点开即听）</h3>
-      <div class="note">点「▶ 播放」即可听到真实语音（有道 TTS，国内可直连；个别环境不可用时自动退回浏览器朗读）。</div>
-      ${AI_AUDIO.map(x=>`<div class="item-row"><div class="thumb">🎧</div><div class="meta"><div class="t">${esc(x.t)}</div></div>
-        <audio controls preload="none" src="${youdaoUrl(x.text, /[一-鿿]/.test(x.text))}" style="width:150px;height:30px"></audio>
-        <button class="btn sm ghost" onclick="playTTS('${esc(x.text)}')">🔊 朗读</button></div>`).join("")}
-    </div>
-    <div class="card">
-      <h3>📝 今日 AI 学习提炼总结</h3>
-      <div class="tag-line">今日聚焦：${list.slice(0,3).map(x=>x.t).join('；')}。</div>
-      <div class="tag-line">建议优先了解 <b>${list[0]?list[0].src:''}</b> 的动态，迁移到采购工作的 <b>比价分析 / 供应商评估 / 成本拆解</b> 环节，每周 3~5 小时稳步推进。</div>
+
+    <div class="ai-sec">
+      <div class="ai-sec-h">📝 AI知识提炼总结</div>
+      <div class="card">
+        <div class="tag-line">${aiSummary()}</div>
+      </div>
+      <div class="card">
+        <h3>🎧 音频速览（点开即听）</h3>
+        <div class="note">点「🔊 朗读」即可听到真实语音（有道 TTS，国内可直连）。</div>
+        ${AI_AUDIO.map(x=>`<div class="item-row"><div class="thumb">🎧</div><div class="meta"><div class="t">${esc(x.t)}</div></div>
+          <button class="btn sm ghost" onclick="playTTS('${esc(x.text)}')">🔊 朗读</button></div>`).join("")}
+      </div>
     </div>`;
 }
 
