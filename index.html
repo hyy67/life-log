@@ -497,7 +497,7 @@ function playTTS(text, lang){
 }
 // 音频速览：优先播放本地预生成 MP3(华为/鸿蒙自带浏览器最稳)，失败才退回 TTS
 function playAudioItem(i){
-  const x=AI_AUDIO[i]; if(!x) return;
+  const x=getAiAudio()[i]; if(!x) return;
   openAudioPlayer();
   const el=document.getElementById('gap_tts'); if(el) el.value=x.text;
   const isZh=/[一-鿿]/.test(x.text);
@@ -669,6 +669,12 @@ const AI_AUDIO = [
   {t:"AI快讯每日听（今日摘要）", text:"今天关注 GitHub Copilot、Claude、OpenAI 的更新，把它们迁移到采购的比价分析、供应商评估与成本拆解环节，让信息真正用在工作里。", mp3:"audio/ai_audio_1.mp3"},
   {t:"十分钟搞懂大模型", text:"大模型本质是在预测下一个词，区别在参数规模、训练数据和对齐方式。理解这点，选型时就不会被营销话术带偏。", mp3:"audio/ai_audio_2.mp3"},
 ];
+// 音频速览：优先用当日 data.json 生成的口播稿(每日更新)，否则回退静态稿
+function getAiAudio(){
+  const a = REMOTE && REMOTE.ai_audio;
+  if(a && a.length){ return a.map((x,i)=>({t:x.t, text:x.text, mp3:'audio/ai_audio_'+i+'.mp3'})); }
+  return AI_AUDIO;
+}
 const TECH_NEWS = [
   {t:"国产大模型推理能力再突破，多模态落地加速", src:"科技日报", time:"2小时前", desc:"国产大模型在多项推理 benchmark 刷新纪录，多模态能力加速落地行业应用。", link:"https://www.stdaily.com"},
   {t:"特斯拉Optimus人形机器人量产进度曝光", src:"36氪", time:"3小时前", desc:"Optimus 量产时间表与产能规划流出，人形机器人商业化进入倒计时。", link:"https://36kr.com"},
@@ -1113,18 +1119,23 @@ const AI_BK_KW = {
 function aiBullets(){
   const items=aiTechItems();
   const buckets={research:[],product:[],robot:[],biz:[]};
-  items.forEach(it=>{
+  const used=new Set();
+  // 每条新闻只进第一个命中的桶，避免重复出现在多个来源卡片
+  for(const it of items){
     const txt=it.t+" "+(it.c||"");
     let placed=false;
-    for(const k of ["research","product","robot","biz"]){
-      if(AI_BK_KW[k].some(w=>txt.indexOf(w)>=0)){ buckets[k].push(it); placed=true; break; }
+    for(const k of ["research","product","robot"]){
+      if(AI_BK_KW[k].some(w=>txt.indexOf(w)>=0)){ buckets[k].push(it); used.add(it); placed=true; break; }
     }
-    if(!placed) buckets.biz.push(it);
-  });
-  const all=items;
+    if(!placed){ buckets.biz.push(it); used.add(it); }
+  }
+  // 不足 3 条的桶，仅从未被分配的新闻中补充（不重复）
   for(const k of ["research","product","robot","biz"]){
     let i=0;
-    while(buckets[k].length<3 && i<all.length){ if(buckets[k].indexOf(all[i])<0) buckets[k].push(all[i]); i++; }
+    while(buckets[k].length<3 && i<items.length){
+      const it=items[i]; i++;
+      if(!used.has(it) && buckets[k].indexOf(it)<0){ buckets[k].push(it); used.add(it); }
+    }
   }
   return buckets;
 }
@@ -1196,7 +1207,7 @@ function p_ai(){
       <div class="card">
         <h3>🎧 音频速览（点开即听）</h3>
         <div class="note">点「🔊 播放」即听：播放的是已预生成的中文语音（MP3），华为/鸿蒙自带浏览器也能稳定出声。若本地音频不可用，会自动改用浏览器语音。</div>
-        ${AI_AUDIO.map((x,i)=>`<div class="item-row"><div class="thumb">🎧</div><div class="meta"><div class="t">${esc(x.t)}</div></div>
+        ${getAiAudio().map((x,i)=>`<div class="item-row"><div class="thumb">🎧</div><div class="meta"><div class="t">${esc(x.t)}</div></div>
           <button class="btn sm ghost" onclick="playAudioItem(${i})">🔊 播放</button></div>`).join("")}
       </div>
     </div>`;

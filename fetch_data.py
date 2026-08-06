@@ -150,6 +150,24 @@ def wmo_text(c):
     try: return WMO.get(int(float(c)), "未知")
     except: return "未知"
 
+# ---------- 3.6 音频速览口播稿（从当日科技新闻提炼，每日更新）----------
+def build_ai_audio(news):
+    tech = (news.get("tech") or [])[:3]
+    intros = ["AI快讯听，今天值得关注的第一条：", "接着看第二条：", "最后一条："]
+    segs = []
+    for i, it in enumerate(tech):
+        title = (it[0] if it else "") or ""
+        if not title:
+            continue
+        # 口播稿：引导语 + 标题 + 自然停顿，控制在 60 字内便于收听
+        segs.append(intros[i] + title + "。")
+    while len(segs) < 3:
+        segs.append("今天暂无更多 AI 快讯，欢迎明天继续收听，把新工具用进你的工作流。")
+    out = []
+    for i, s in enumerate(segs[:3]):
+        out.append({"t": "AI快讯每日听 %d" % (i + 1), "text": s})
+    return out
+
 def fetch_weather():
     city = (os.environ.get("WEATHER_CITY") or "深圳").strip()
     try:
@@ -189,12 +207,14 @@ def main():
     boards, db = fetch_boards(raw)
     weather, dwe = fetch_weather()
     trade = is_trade_day()
+    ai_audio = build_ai_audio(news)
     data = {
         "generatedAt": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
         "date": today_str(),
         "indices": indices, "_demo_indices": di,
         "news": news, "_demo_news": dn,
         "_demo_tech": dt, "_demo_world": dw,
+        "ai_audio": ai_audio,
         "boards": boards, "_demo_boards": db,
         "weather": weather, "_demo_weather": dwe,
         "review": {"isTrade": trade},

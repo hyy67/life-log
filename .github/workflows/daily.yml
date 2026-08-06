@@ -26,10 +26,15 @@ jobs:
           WEATHER_CITY: ${{ vars.WEATHER_CITY }}
         run: python3 fetch_data.py
 
+      - name: 生成音频速览 MP3（edge-tts，随口播稿每日更新）
+        run: |
+          pip install edge-tts >/dev/null 2>&1 || pip3 install edge-tts >/dev/null 2>&1
+          python3 gen_audio.py
+
       - name: 提交更新
         run: |
           git config user.name "life-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add data.json
-          git diff --cached --quiet || git commit -m "auto: update data.json"
+          git add data.json audio/
+          git diff --cached --quiet || git commit -m "auto: update data.json + audio"
           git push
