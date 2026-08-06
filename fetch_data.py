@@ -150,19 +150,29 @@ def wmo_text(c):
     try: return WMO.get(int(float(c)), "未知")
     except: return "未知"
 
-# ---------- 3.6 音频速览口播稿（从当日科技新闻提炼，每日更新）----------
+# ---------- 3.6 音频速览口播稿（围绕采购工作，每日更新）----------
+PROC_KW = ["采购", "供应链", "物流", "成本", "比价", "电商", "制造", "库存", "供应商",
+           "招标", "投标", "ERP", "SaaS", "自动化", "智能体", "Agent", "大模型",
+           "AI工具", "效率", "降本", "数字化", "工业互联网", "仓储", "经销商"]
+
 def build_ai_audio(news):
-    tech = (news.get("tech") or [])[:3]
-    intros = ["AI快讯听，今天值得关注的第一条：", "接着看第二条：", "最后一条："]
+    tech = news.get("tech") or []
+    # 优先挑与采购/供应链/AI工具相关的新闻，其次补当日其他科技新闻
+    proc = [it for it in tech if any(k in (it[0] or "") for k in PROC_KW)]
+    picks = (proc + tech)[:3]
+    intros = [
+        "AI快讯听，今天这条和采购工作最相关：",
+        "接着看，这条能用到供应商管理或比价上：",
+        "最后这条，想想怎么迁移到你的日常工作流：",
+    ]
     segs = []
-    for i, it in enumerate(tech):
+    for i, it in enumerate(picks):
         title = (it[0] if it else "") or ""
         if not title:
             continue
-        # 口播稿：引导语 + 标题 + 自然停顿，控制在 60 字内便于收听
         segs.append(intros[i] + title + "。")
     while len(segs) < 3:
-        segs.append("今天暂无更多 AI 快讯，欢迎明天继续收听，把新工具用进你的工作流。")
+        segs.append("今天暂无更多 AI 快讯，欢迎明天继续收听，把新工具用进你的采购工作流。")
     out = []
     for i, s in enumerate(segs[:3]):
         out.append({"t": "AI快讯每日听 %d" % (i + 1), "text": s})
